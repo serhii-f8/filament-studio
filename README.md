@@ -402,11 +402,11 @@ See [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 ## Security
 
-If you discover a security vulnerability, please send an email to the maintainers. All security vulnerabilities will be promptly addressed.
+Please report vulnerabilities through [GitHub's private vulnerability reporting](https://github.com/serhii-f8/filament-studio/security) rather than a public issue. See [SECURITY.md](SECURITY.md) for details.
 
 ## Credits
 
-- [Flexpik](https://github.com/serhii-f8)
+- [Serhii Fedorenko](https://github.com/serhii-f8)
 - [All Contributors](../../contributors)
 
 ## License
