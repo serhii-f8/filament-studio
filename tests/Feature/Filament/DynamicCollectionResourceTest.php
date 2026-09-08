@@ -146,6 +146,30 @@ it('displays records in the list table', function () {
         ->assertSee('Widget Pro');
 });
 
+it('finds records by searching an EAV text value', function () {
+    createEavRecord($this->collection, ['name' => 'Widget Pro']);
+    createEavRecord($this->collection, ['name' => 'Gadget Mini']);
+
+    Livewire::test(ListCollectionRecords::class, [
+        'collectionSlug' => 'products',
+    ])
+        ->searchTable('Widget')
+        ->assertCanSeeTableRecords(StudioRecord::where('collection_id', $this->collection->id)
+            ->whereHas('values', fn ($q) => $q->where('val_text', 'Widget Pro'))
+            ->get())
+        ->assertDontSee('Gadget Mini');
+});
+
+it('excludes non-matching records when searching an EAV value', function () {
+    createEavRecord($this->collection, ['name' => 'Widget Pro']);
+
+    Livewire::test(ListCollectionRecords::class, [
+        'collectionSlug' => 'products',
+    ])
+        ->searchTable('NoSuchProduct')
+        ->assertDontSee('Widget Pro');
+});
+
 it('does not display records from other collections', function () {
     $otherCollection = StudioCollection::factory()->create([
         'slug' => 'categories',
