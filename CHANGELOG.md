@@ -5,6 +5,17 @@ All notable changes to Filament Studio will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2026-09-08
+
+### Changed
+
+- Package author is now Serhii Fedorenko; the former Flexpik name, `info@flexpick.net`
+  address, and `flexpick.net` homepage have been removed from `composer.json` and the
+  README credits. The PHP namespace `Flexpik\FilamentStudio\` is **unchanged**, as is the
+  `replace` entry for `flexpik/filament-studio` — no code changes are required.
+- Security reports now go through GitHub's private vulnerability reporting instead of the
+  retired `security@flexpik.com` address.
+
 ## [1.5.0] - 2026-09-08
 
 ### Added
@@ -245,7 +256,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Configurable Table Prefix** to avoid naming conflicts
 - **Migration Log Tracking** for schema change auditing
 
-[Unreleased]: https://github.com/serhii-f8/filament-studio/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/serhii-f8/filament-studio/compare/v1.5.1...HEAD
+[1.5.1]: https://github.com/serhii-f8/filament-studio/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/serhii-f8/filament-studio/compare/v1.4.2...v1.5.0
 [1.2.0]: https://github.com/serhii-f8/filament-studio/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/serhii-f8/filament-studio/compare/v1.0.4...v1.1.0
