@@ -429,7 +429,7 @@ acme/filament-studio-slack/
     "description": "Slack operations and triggers for Filament Studio flows",
     "require": {
         "php": "^8.2",
-        "flexpik/filament-studio": "^1.0"
+        "serhii-f8/filament-studio": "^1.0"
     },
     "autoload": {
         "psr-4": {

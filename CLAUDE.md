@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Package Overview
 
-Filament Studio (`flexpik/filament-studio`) is a Laravel package that provides a dynamic data model manager for Filament v5 using EAV (Entity-Attribute-Value) storage. Users create collections with custom fields at runtime — no migrations needed per collection.
+Filament Studio (`serhii-f8/filament-studio`) is a Laravel package that provides a dynamic data model manager for Filament v5 using EAV (Entity-Attribute-Value) storage. Users create collections with custom fields at runtime — no migrations needed per collection.
 
 ## Commands
 

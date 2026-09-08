@@ -20,7 +20,7 @@ it('returns server info as JSON text response', function () {
     $payload = json_decode((string) $response->content(), true);
 
     expect($payload)->toMatchArray([
-        'package' => 'flexpik/filament-studio',
+        'package' => 'serhii-f8/filament-studio',
         'mcp_protocol_version' => '2024-11-05',
         'tenant_id' => 7,
     ]);

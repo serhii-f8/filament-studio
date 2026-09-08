@@ -1,5 +1,5 @@
 {
-    "name": "flexpik/filament-studio",
+    "name": "serhii-f8/filament-studio",
     "description": "Dynamic data model manager for Filament — build unlimited collections with custom fields, EAV storage, versioning, and multi-tenancy",
     "keywords": ["laravel", "filament", "eav", "crud", "dynamic-models", "data-manager"],
     "type": "library",
@@ -12,10 +12,10 @@
             "role": "Developer"
         }
     ],
-    "homepage": "https://github.com/flexpik/filament-studio",
+    "homepage": "https://github.com/serhii-f8/filament-studio",
     "support": {
-        "issues": "https://github.com/flexpik/filament-studio/issues",
-        "source": "https://github.com/flexpik/filament-studio"
+        "issues": "https://github.com/serhii-f8/filament-studio/issues",
+        "source": "https://github.com/serhii-f8/filament-studio"
     },
     "require": {
         "php": "^8.3",
@@ -31,6 +31,9 @@
         "pestphp/pest-plugin-laravel": "^4.0",
         "pestphp/pest-plugin-mutate": "^4.0",
         "spatie/laravel-permission": "^7.2 || ^8.0"
+    },
+    "replace": {
+        "flexpik/filament-studio": "self.version"
     },
     "autoload": {
         "psr-4": {

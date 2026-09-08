@@ -85,7 +85,7 @@ it('reads studio://info via resources/read with a valid API key', function () {
     $contents = $payload['result']['contents'][0]['text'] ?? '';
     $info = json_decode($contents, true);
 
-    expect($info['package'])->toBe('flexpik/filament-studio');
+    expect($info['package'])->toBe('serhii-f8/filament-studio');
     expect($info['tenant_id'])->toBe(99);
     expect($info['capabilities']['field_types'])->toBe(33);
 });
