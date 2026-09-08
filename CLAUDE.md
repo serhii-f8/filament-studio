@@ -8,7 +8,7 @@ Filament Studio (`serhii-f8/filament-studio`) is a Laravel package that provides
 
 ## Commands
 
-All commands run from the package root (`packages/flexpik/filament-studio/`).
+All commands run from the repository root (`/var/www/html/filament-studio`).
 
 ```bash
 # Run all tests (uses in-memory SQLite via Orchestra Testbench)
@@ -25,7 +25,7 @@ vendor/bin/pest --testsuite=Unit
 vendor/bin/pest --testsuite=Feature
 
 # Format PHP (Pint lives in host project, not package — must use absolute path or Docker)
-docker exec php83 /var/www/html/crud/vendor/bin/pint --dirty --format agent
+docker exec -w /var/www/html/filament-studio php83 /var/www/html/crud/vendor/bin/pint --dirty --format agent
 ```
 
 Tests use Pest v4 with Orchestra Testbench. The `TestCase` base class (`tests/TestCase.php`) sets up SQLite in-memory, registers all Filament service providers, converts migration `.php.stub` files to temp `.php` files, and provides `authenticateUser()` for tests needing auth.
@@ -36,13 +36,13 @@ The project uses Docker containers for PHP execution. The primary container is `
 
 ```bash
 # Run tests via Docker (required for coverage/mutation testing)
-docker exec -w /var/www/html/crud/packages/flexpik/filament-studio -e XDEBUG_MODE=off php83 vendor/bin/pest --compact
+docker exec -w /var/www/html/filament-studio -e XDEBUG_MODE=off php83 vendor/bin/pest --compact
 
 # Run mutation testing (requires PCOV, installed in php83 container)
-docker exec -w /var/www/html/crud/packages/flexpik/filament-studio -e XDEBUG_MODE=off php83 vendor/bin/pest --mutate --path=src/SomeFile.php
+docker exec -w /var/www/html/filament-studio -e XDEBUG_MODE=off php83 vendor/bin/pest --mutate --path=src/SomeFile.php
 
 # Run pint via Docker
-docker exec php83 /var/www/html/crud/vendor/bin/pint --dirty --format agent
+docker exec -w /var/www/html/filament-studio php83 /var/www/html/crud/vendor/bin/pint --dirty --format agent
 ```
 
 - **Host PHP**: Herd Lite PHP 8.4 — works for running tests but has no coverage driver
