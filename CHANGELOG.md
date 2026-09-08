@@ -5,6 +5,20 @@ All notable changes to Filament Studio will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-09-08
+
+### Changed
+
+- **`durable-workflow/workflow` constraint widened to `^1.0 || ^2.0`.** Version 2.x is now
+  accepted alongside 1.x. Existing installs are unaffected — nothing is forced to upgrade.
+- **`laravel/mcp` constraint widened to `^0.3 || ^0.5 || ^0.6 || ^0.8 || ^0.9`.** Version 0.9 is
+  now accepted. Existing installs are unaffected.
+- Third-party GitHub Actions in the test workflow are pinned to full commit SHAs
+  (`actions/checkout@3d3c42e` / v7.0.1, `shivammathur/setup-php@f3e473d` / v2.37.2) so a
+  retargeted or compromised tag cannot change what CI executes.
+- Dependabot now waits before opening an update PR — 3 days for patches, 7 for minors, 14 for
+  majors — across both the Composer and GitHub Actions ecosystems.
+
 ## [1.5.1] - 2026-09-08
 
 ### Changed
@@ -256,7 +270,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Configurable Table Prefix** to avoid naming conflicts
 - **Migration Log Tracking** for schema change auditing
 
-[Unreleased]: https://github.com/serhii-f8/filament-studio/compare/v1.5.1...HEAD
+[Unreleased]: https://github.com/serhii-f8/filament-studio/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/serhii-f8/filament-studio/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/serhii-f8/filament-studio/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/serhii-f8/filament-studio/compare/v1.4.2...v1.5.0
 [1.2.0]: https://github.com/serhii-f8/filament-studio/compare/v1.1.0...v1.2.0
