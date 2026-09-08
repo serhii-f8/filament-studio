@@ -5,6 +5,29 @@ All notable changes to Filament Studio will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-09-08
+
+### Removed
+
+- **`durable-workflow/workflow` is no longer a dependency.** It was declared as a hard `require`
+  but never used: nothing in `src/`, `tests/`, `database/`, or `config/` referenced its `Workflow\`
+  namespace, its classes, its namespaced helper functions, its tables, or its config, and its
+  service provider was never registered by the test harness. The Flows engine is self-contained —
+  `FlowWorkflow` walks the operation graph itself and `ExecuteFlowJob` is a plain Laravel queued
+  job, so durability comes from Laravel queues plus the `studio_flow_run*` tables. Verified by
+  removing the package and running the full suite: 1785 passed, 1 skipped, 4323 assertions —
+  identical to the run with it installed.
+
+  This drops three packages from every install — `durable-workflow/workflow` and its transitive
+  `apache/avro` and `react/promise` — along with roughly thirty unused migrations. **No code
+  changes are required.** If your own application uses `durable-workflow/workflow` and was
+  relying on Filament Studio to pull it in, add it to your own `composer.json`.
+
+### Fixed
+
+- Corrected the architecture note describing Flows as "built on `durable-workflow/workflow`"
+  (introduced in v1.4.0). That was never accurate; the engine has always been self-contained.
+
 ## [1.6.0] - 2026-09-08
 
 ### Changed
@@ -270,7 +293,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Configurable Table Prefix** to avoid naming conflicts
 - **Migration Log Tracking** for schema change auditing
 
-[Unreleased]: https://github.com/serhii-f8/filament-studio/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/serhii-f8/filament-studio/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/serhii-f8/filament-studio/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/serhii-f8/filament-studio/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/serhii-f8/filament-studio/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/serhii-f8/filament-studio/compare/v1.4.2...v1.5.0

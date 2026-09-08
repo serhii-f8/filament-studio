@@ -141,7 +141,7 @@ All major models scope by `tenant_id`. Queries auto-filter to the current tenant
 
 ### Flows (Automation Engine)
 
-`src/Flows/` is a self-contained automation subsystem (triggers → directed graph of operations) with its own models, policies, enums, Filament resource, and namespace `Flexpik\FilamentStudio\Flows\`. It is **opt-in** via config (`flows.enabled`, default false) and built on the `durable-workflow/workflow` package.
+`src/Flows/` is a self-contained automation subsystem (triggers → directed graph of operations) with its own models, policies, enums, Filament resource, and namespace `Flexpik\FilamentStudio\Flows\`. It is **opt-in** via config (`flows.enabled`, default false). Execution is self-contained — `FlowWorkflow` walks the graph itself and `ExecuteFlowJob` is a plain Laravel queued job; durability comes from Laravel queues plus the `studio_flow_run*` tables, not from a third-party workflow engine.
 
 **Data model** (tables prefixed `studio_flow*`):
 - `studio_flows` — flow definition (trigger config, published graph, status)
