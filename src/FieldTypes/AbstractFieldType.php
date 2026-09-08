@@ -8,6 +8,8 @@ use Filament\Tables\Filters\BaseFilter;
 use Flexpik\FilamentStudio\Enums\EavCast;
 use Flexpik\FilamentStudio\Enums\FieldWidth;
 use Flexpik\FilamentStudio\Models\StudioField;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 
 abstract class AbstractFieldType
 {
@@ -167,9 +169,41 @@ abstract class AbstractFieldType
             $column->label($this->field->getTranslatedAttribute('label'));
         }
 
-        $column->sortable()->searchable();
+        $column->sortable();
+        $column->searchable(query: fn (Builder $query, string $search): Builder => $this->applySearchToQuery($query, $search));
         $column->toggleable();
 
         return $column;
+    }
+
+    /**
+     * Constrain a record query to rows whose value for this field matches the search term.
+     *
+     * Filament's default search would emit `where "<column_name>" like ?` against the
+     * records table, but EAV values live in the values table and are only exposed on the
+     * record query as correlated subquery aliases — which SQL cannot reference in a WHERE
+     * clause. So the search has to go back to the values table directly.
+     */
+    protected function applySearchToQuery(Builder $query, string $search): Builder
+    {
+        $prefix = config('filament-studio.table_prefix', 'studio_');
+        $valuesTable = $prefix.'values';
+        $recordsTable = $prefix.'records';
+        $valueColumn = $this->field->eavColumn();
+        $fieldId = $this->field->id;
+
+        return $query->whereExists(function (QueryBuilder $subquery) use (
+            $valuesTable,
+            $recordsTable,
+            $valueColumn,
+            $fieldId,
+            $search,
+        ): void {
+            $subquery->selectRaw('1')
+                ->from($valuesTable)
+                ->whereColumn("{$valuesTable}.record_id", "{$recordsTable}.id")
+                ->where("{$valuesTable}.field_id", $fieldId)
+                ->where("{$valuesTable}.{$valueColumn}", 'like', "%{$search}%");
+        });
     }
 }

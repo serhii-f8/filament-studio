@@ -5,10 +5,21 @@ All notable changes to Filament Studio will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.5.0] - 2026-09-08
+
+### Added
+
+- **User guide for non-technical users** (`docs/user-guide/`) — a twelve-part, screenshot-led
+  walkthrough written for the people who use a Studio panel rather than the people who install
+  it: signing in, collections, fields (all 33 types grouped by what you want to store), records,
+  search and filtering, dashboards, version history, permissions, automations, API keys, and a
+  glossary. Linked from the README.
 
 ### Changed
 
+- **README rewritten** to lead with the problem it solves rather than a feature list, with
+  concrete use cases, an honest "when not to use it" section, and refreshed screenshots
+  captured against the current UI.
 - **Package renamed to `serhii-f8/filament-studio`.** The repository moved to
   [github.com/serhii-f8/filament-studio](https://github.com/serhii-f8/filament-studio) and the Composer package
   follows it. The PHP namespace is unchanged — `Flexpik\FilamentStudio\` stays exactly as it is, so **no code
@@ -28,6 +39,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Repository, issue tracker, homepage, and documentation links now point at the `serhii-f8` account. The old
   GitHub URLs redirect, so existing links continue to resolve.
 - Copyright holder in `LICENSE` and `LICENSE.md` updated to Serhii Fedorenko. The license itself is unchanged (MIT).
+
+### Fixed
+
+- **Record list search now returns results.** The search box on a dynamic collection's
+  record list matched nothing for any term, including exact field values. Table columns
+  were registered with Filament's default `searchable()`, which emitted
+  `where "<column_name>" like ?` against `studio_records` — but EAV values live in
+  `studio_values` and are only exposed on the record query as correlated subquery
+  aliases, which SQL cannot reference in a `WHERE` clause. On SQLite the unresolved
+  identifier silently degraded to a string literal (always false, hence zero rows); on
+  MySQL the same query would fail with `Unknown column`. Columns now supply a search
+  query that matches against the values table via `whereExists`.
 
 ## [1.4.2] - 2026-08-29
 
@@ -222,7 +245,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Configurable Table Prefix** to avoid naming conflicts
 - **Migration Log Tracking** for schema change auditing
 
-[Unreleased]: https://github.com/serhii-f8/filament-studio/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/serhii-f8/filament-studio/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/serhii-f8/filament-studio/compare/v1.4.2...v1.5.0
 [1.2.0]: https://github.com/serhii-f8/filament-studio/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/serhii-f8/filament-studio/compare/v1.0.4...v1.1.0
 [1.0.3]: https://github.com/serhii-f8/filament-studio/compare/v1.0.2...v1.0.3

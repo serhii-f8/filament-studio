@@ -11,103 +11,138 @@
 
 # Filament Studio
 
-**A dynamic data model manager for Filament v5 — create collections, define fields, manage records, and build dashboards, all at runtime. No migrations required.**
+**Let your users build their own data structures — inside the Filament panel you already ship.**
 
-Filament Studio turns your Filament admin panel into a flexible data platform. Define custom data structures through a visual interface, and the plugin handles the rest: forms, tables, filters, API endpoints, dashboards, workflow automation, and access control — all powered by an EAV (Entity-Attribute-Value) storage engine.
+Filament Studio adds a visual data model manager to any Filament v5 panel. Your team (or your client) creates collections and fields through the admin UI, and Studio generates the forms, tables, filters, dashboards, REST API and automations for them — at runtime, with no migration and no deploy.
 
-## Screenshots
+---
 
-<details>
-<summary>Collections list</summary>
-<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/collections-list.png" alt="Collections List" />
-</details>
+## The problem
 
-<details>
-<summary>Create collection — Basic Info</summary>
-<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/create-collection-basic-info.png" alt="Create Collection — Basic Info" />
-</details>
+It's 5pm on Friday. Your client emails: *"Can we add a 'Preferred Contact Method' to the customer form? And a report of customers by region?"*
 
-<details>
-<summary>Create collection — System Fields</summary>
-<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/create-collection-system-fields.png" alt="Create Collection — System Fields" />
-</details>
+<table>
+<tr>
+<th width="50%">Without Filament Studio</th>
+<th width="50%">With Filament Studio</th>
+</tr>
+<tr>
+<td>
 
-<details>
-<summary>Create collection — Settings</summary>
-<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/create-collection-settings.png" alt="Create Collection — Settings" />
-</details>
+1. Write a migration
+2. Update the model's `$fillable` and casts
+3. Add the field to the Filament resource form
+4. Add a table column
+5. Add a filter
+6. Add validation rules
+7. Write the report query and widget
+8. Commit, review, deploy
+9. Repeat for the next request, forever
 
-<details>
-<summary>Fields list</summary>
-<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/fields-list.png" alt="Fields List" />
-</details>
+</td>
+<td>
 
-<details>
-<summary>Field editor</summary>
-<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/field-editor.png" alt="Field Editor" />
-</details>
+1. The client clicks **Add Field**
+2. The client builds the report from a panel picker
 
-<details>
-<summary>Advanced filter builder</summary>
-<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/advanced-filter.png" alt="Advanced Filter Builder" />
-</details>
+You are not in the loop.
 
-<details>
-<summary>Version history</summary>
-<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/version-history.png" alt="Version History" />
-</details>
+</td>
+</tr>
+</table>
 
-<details>
-<summary>Dashboard editor</summary>
-<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/dashboard-editor.png" alt="Dashboard Editor" />
-</details>
+Every "just one more field" request stops being a deploy. The schema becomes data your users own, instead of code you maintain.
 
-<details>
-<summary>API Keys</summary>
-<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/api-keys-list.png" alt="API Keys List" />
-</details>
+---
 
-<details>
-<summary>API Key editor</summary>
-<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/api-key-editor.png" alt="API Key Editor" />
-</details>
+## See it in action
 
-<details>
-<summary>API Documentation</summary>
-<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/api-documentation.png" alt="API Documentation" />
-</details>
+**Define a collection's fields through the UI — no migration:**
 
-<details>
-<summary>Collection permissions</summary>
-<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/collection-permissions.png" alt="Collection Permissions" />
-</details>
+![Fields list](https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/fields-list.png)
 
-<details>
-<summary>Flow editor</summary>
-<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/flow-editor.png" alt="Flow Editor" />
-</details>
+**Every collection gets a full CRUD interface, generated from those fields:**
 
-<details>
-<summary>Flow designer canvas</summary>
-<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/flow-designer.png" alt="Flow Designer Canvas" />
-</details>
+![Records list](https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/records-list.png)
 
-## Why Filament Studio?
+**Data changes can trigger real automation, designed on a visual canvas:**
 
-- **No migrations per collection** — Add new data types at runtime without touching your codebase
-- **Full Filament integration** — Native forms, tables, filters, and actions that look and feel like hand-crafted resources
-- **Production-ready** — Multi-tenancy, multilingual content, authorization, versioning, soft deletes, and audit logging out of the box
-- **Automatable** — A visual workflow designer with triggers, versioned publishing, and full run observability, so data changes can kick off real automation
-- **AI-native** — Built-in MCP server lets Claude, Cursor, and other AI tools manage your data model through natural language
-- **Extensible** — Register custom field types, panel types, condition resolvers, and lifecycle hooks
+![Flow designer](https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/flow-designer.png)
 
-## Features
+<sub>More screenshots in the [gallery](#screenshot-gallery) at the bottom, and step-by-step walkthroughs in the [User Guide](docs/user-guide/README.md).</sub>
 
-### Dynamic Collections
+---
 
-Create and manage data collections with custom fields through the admin UI. Each collection gets a fully functional CRUD interface with forms, tables, and filters — generated dynamically from the field definitions.
+## Who it's for
 
-**33 built-in field types** across 9 categories:
+**Agencies shipping client admin panels.** Hand the client a panel they can extend themselves. The "can you add a field" emails stop.
+
+**Internal tools teams.** Ops, finance and support each want their own tracker. Give them one panel and let each team model its own data instead of queueing behind your sprint.
+
+**Headless CMS backends.** Editors define content types in the UI; your frontend reads them over the REST API with per-collection API keys.
+
+**Multi-tenant SaaS.** Every tenant gets its own collections, records, dashboards and API keys, isolated by `tenant_id` across every model.
+
+## When *not* to use it
+
+Being honest saves you a refactor later. Reach for regular Eloquent models instead when:
+
+- **The schema is known and stable.** If you already know you need `orders` with fifteen fixed columns, a migration is simpler, faster and easier to query.
+- **You need heavy analytical queries.** EAV stores each value in its own row, so wide reporting queries mean many joins. Studio is built for operational CRUD, not for a data warehouse.
+- **You depend on database-level constraints across fields.** Composite foreign keys, multi-column unique indexes and check constraints don't translate to EAV storage.
+
+Studio and hand-written resources coexist fine in one panel — use each where it fits.
+
+---
+
+## Quick Start
+
+```bash
+composer require serhii-f8/filament-studio
+php artisan vendor:publish --tag="filament-studio-migrations"
+php artisan migrate
+```
+
+Register the plugin on your panel:
+
+```php
+use Flexpik\FilamentStudio\FilamentStudioPlugin;
+
+public function panel(Panel $panel): Panel
+{
+    return $panel->plugins([
+        FilamentStudioPlugin::make(),
+    ]);
+}
+```
+
+Open your admin panel — there's a new **Studio** section in the sidebar. Create a collection, add a few fields, and you have a working CRUD interface.
+
+Optional configuration:
+
+```php
+FilamentStudioPlugin::make()
+    ->navigationGroup('Content')
+    ->enableVersioning()
+    ->enableSoftDeletes()
+    ->enableApi()
+    ->fieldTypes(['currency' => CurrencyFieldType::class])
+    ->panelTypes([CustomMapPanel::class]);
+```
+
+```bash
+php artisan vendor:publish --tag="filament-studio-config"
+```
+
+---
+
+## What you get
+
+### Collections and fields, defined at runtime
+
+Create a collection, add fields, and Studio generates the form, table, filters and validation. Fields can be reordered, made required or unique, hidden from forms or tables, and shown conditionally based on other values.
+
+**33 field types across 9 categories:**
 
 | Category | Types |
 |----------|-------|
@@ -121,28 +156,31 @@ Create and manage data collections with custom fields through the admin UI. Each
 | Structured | Repeater, Builder, Key-Value |
 | Presentation | Section Header, Divider, Callout |
 
-### Dashboard Builder
+### Dashboards your users build themselves
 
-Build data dashboards with **9 panel types**: Metric, List, Time Series, Bar Chart, Line Chart, Pie Chart, Meter, Label, and Variable. Place panels on dashboards (12-column grid), collection pages, or record pages.
+Non-developers assemble dashboards from a panel picker — no widget classes to write. **9 panel types** (Metric, List, Time Series, Bar, Line, Pie, Meter, Label, Variable) can be placed on dashboards, collection pages or record pages, with aggregate functions and dynamic variables like `$CURRENT_USER` and `$NOW`.
 
-Panels support dynamic variables (`$CURRENT_USER`, `$NOW`, `{{custom}}`), aggregate functions (count, sum, avg, min, max), and interactive controls.
+### Filtering that survives real questions
 
-### Advanced Filtering
+A visual filter builder with **23 operators** and nested AND/OR groups, so "customers in Germany who are either overdue or high-value" is a filter, not a support ticket. Operators adapt to the field type, and useful filters can be saved and shared with the team.
 
-A visual filter builder with **23 operators**, nested AND/OR logic, dynamic variables, and saved filter presets. Operators adapt to data type — text fields get "contains" and "starts with", dates get "before" and "after", JSON fields get "contains any/all/none".
+### A REST API you didn't have to write
 
-### REST API
+Turn on the API and every collection gets CRUD endpoints with API key auth, per-collection permissions, rate limiting and OpenAPI documentation generated via Scramble.
 
-Auto-generated RESTful API with API key authentication, per-collection permissions, rate limiting, and OpenAPI documentation via Scramble.
+### Workflow automation (Flows)
 
-### MCP Server
+Data changes can start real work. Triggers (manual, webhook, collection event, cron schedule) kick off a graph of operations — record CRUD, conditions, payload transforms, HTTP requests, emails, or another flow.
 
-A built-in [Model Context Protocol](https://modelcontextprotocol.io/) server lets AI assistants (Claude, Cursor, Windsurf) manage your data model through natural language. Connect via stdio or HTTP and gain access to **34 tools** covering every aspect of Filament Studio:
+- **Draft → publish versioning** — edit a live draft, dry-run and step through it, then publish an immutable, restorable version
+- **Full observability** — every run records a step tree of inputs, outputs, timing and status
+- **Security by default** — HMAC-signed, rate-limited, IP-allowlisted webhooks; dangerous operations need explicit publish-time confirmation; sensitive values are masked before logs are written
 
-- **Schema design** — create and update collections, fields, and field options
-- **Data access** — query, create, update, and delete records with full filter-tree support
-- **Dashboards** — build and configure dashboards and panels
-- **Administration** — manage saved filters and API keys
+Flows are opt-in via `flows.enabled`. See the [Flows documentation](docs/flows.md).
+
+### AI-native (MCP server)
+
+A built-in [Model Context Protocol](https://modelcontextprotocol.io/) server lets Claude, Cursor or Windsurf manage your data model in natural language — **34 tools** covering schema design, data access, dashboards and administration.
 
 ```json
 {
@@ -157,120 +195,46 @@ A built-in [Model Context Protocol](https://modelcontextprotocol.io/) server let
 }
 ```
 
-### Flows (Automation Engine)
+### Built for production
 
-A self-contained workflow automation system: triggers start a run, a directed graph of
-operations executes in order, and every run is recorded for observability. Flows are opt-in
-(`flows.enabled`) and designed visually on a React-based canvas.
+- **Multi-tenancy** — every collection, record, dashboard and API key is scoped to its tenant
+- **Multilingual** — opt-in per-locale values with automatic fallback, an admin locale switcher, and locale-aware API responses
+- **Versioning & soft deletes** — snapshot history with one-click restore, per locale, and a recycle bin for deleted records
+- **Authorization** — policy-based access with per-collection CRUD permissions, auto-synced to `spatie/laravel-permission` when it's installed (and gracefully skipped when it isn't)
+- **Extensible** — register custom field types, panel types, flow operations, triggers and lifecycle hooks
 
-- **Triggers** — Manual, Webhook (HMAC-signed, rate-limited, IP-allowlisted), Collection Event, and Schedule (cron)
-- **Operations** — Records CRUD, Condition, Transform Payload, Send Email, HTTP Request, Trigger Flow (composition, depth-limited)
-- **Draft → Publish versioning** — edit a live draft, test it inline (with dry-run and step-through debugging), then publish an immutable, restorable version
-- **Observability** — every run captures a step-by-step tree of inputs, outputs, timing, and status, with dashboard widgets for recent runs, failure rate, and duration
-- **Security** — dangerous operations and public webhooks require explicit publish-time confirmation; sensitive config values are masked before logs are persisted
-- **Extensible** — register custom operations and triggers via the plugin API
+---
 
-See [Flows documentation](docs/flows.md) for the full guide.
+## Proof it works
 
-### Conditional Logic
-
-Fields can be conditionally visible, required, or disabled based on form values, user permissions, page context, or custom resolvers — with cycle detection for safety.
-
-### Multilingual Content
-
-Opt-in per-locale support for translatable fields. Enable multilingual globally, then configure each collection with its own supported locales and default locale. Mark individual fields as translatable — non-translatable fields (booleans, dates, numbers) store a single value regardless of locale.
-
-- **Locale resolution** — `?locale=` query param > `X-Locale` header > session > collection default > global default
-- **Automatic fallback** — When a translation is missing, falls back to the default locale with metadata indicating which fields fell back
-- **Admin locale switcher** — Toggle between locales in the record editor; version history includes a per-locale viewer
-- **API support** — All REST endpoints accept locale selection; `?all_locales=true` returns all translations as nested objects
-- **OpenAPI documentation** — Locale parameters and `_meta` response schemas appear automatically in API docs when multilingual is enabled
-
-```php
-// config/filament-studio.php
-'locales' => [
-    'enabled' => true,
-    'available' => ['en', 'fr', 'de'],
-    'default' => 'en',
-],
-```
-
-### Multi-Tenancy
-
-Full tenant isolation across all models. Every collection, record, dashboard, and API key is scoped to its tenant.
-
-### Record Versioning & Soft Deletes
-
-Optional snapshot-based version history with restore capability, including per-locale snapshots for translatable fields. Optional soft deletes to recover deleted records.
-
-### Authorization & Spatie Permissions
-
-Policy-based access control with granular per-collection permissions. When `spatie/laravel-permission` is installed, Filament Studio automatically syncs permissions for each collection:
-
-- **Per-collection CRUD permissions** — `studio.collection.{slug}.viewRecords`, `createRecord`, `updateRecord`, `deleteRecord`
-- **Global permissions** — `studio.manageFields`, `studio.manageApiKeys`
-- **Auto-sync** — Permissions are created/removed automatically when collections are created, renamed, or deleted
-- **Navigation & action enforcement** — UI elements (navigation items, create/edit/delete buttons) are hidden when the user lacks the corresponding permission
-- **Graceful fallback** — If Spatie Permission is not installed, all actions are allowed by default
-
-## Quick Start
-
-### Install
+- **1,784 tests** across unit, feature and integration suites (Pest v4 + Orchestra Testbench)
+- **Mutation-tested** — an MSI target of ≥80% per module, not just line coverage
+- **CI on PHP 8.3 and 8.4** on every push
 
 ```bash
-composer require serhii-f8/filament-studio
+vendor/bin/pest
 ```
 
-### Publish & Migrate
+---
 
-```bash
-php artisan vendor:publish --tag="filament-studio-migrations"
-php artisan migrate
-```
+## How it works
 
-### Register the Plugin
+Instead of a table per collection, Studio uses **EAV (Entity-Attribute-Value)** storage across four tables:
 
-```php
-use Flexpik\FilamentStudio\FilamentStudioPlugin;
+| Table | Purpose |
+|-------|---------|
+| `studio_collections` | Schema definitions (name, slug, settings) |
+| `studio_fields` | Field definitions per collection (type, settings, validation) |
+| `studio_records` | Record entries (UUID, collection, tenant) |
+| `studio_values` | Typed data storage (text, integer, decimal, boolean, datetime, JSON columns) |
 
-public function panel(Panel $panel): Panel
-{
-    return $panel
-        ->plugins([
-            FilamentStudioPlugin::make(),
-        ]);
-}
-```
+Values live in **six typed columns** rather than one stringly-typed blob, so sorting and comparison stay native to the database and type safety survives the trip.
 
-Visit your admin panel — you'll find a new **Studio** section in the sidebar.
-
-### Configure (Optional)
-
-```php
-FilamentStudioPlugin::make()
-    ->navigationGroup('Content')
-    ->enableVersioning()
-    ->enableSoftDeletes()
-    ->enableApi()
-    ->fieldTypes([
-        'currency' => CurrencyFieldType::class,
-    ])
-    ->panelTypes([
-        CustomMapPanel::class,
-    ]);
-```
-
-Publish the config for environment-level settings:
-
-```bash
-php artisan vendor:publish --tag="filament-studio-config"
-```
+---
 
 ## Extending
 
-### Custom Field Types
-
-Create field types by extending `AbstractFieldType`:
+### Custom field types
 
 ```php
 use Flexpik\FilamentStudio\FieldTypes\AbstractFieldType;
@@ -291,9 +255,7 @@ class RatingFieldType extends AbstractFieldType
 }
 ```
 
-### Lifecycle Hooks
-
-React to events and modify generated schemas:
+### Lifecycle hooks
 
 ```php
 FilamentStudioPlugin::afterCollectionCreated(fn ($collection) => /* ... */);
@@ -304,31 +266,23 @@ FilamentStudioPlugin::modifyTableColumns(fn (array $columns, $collection) => $co
 FilamentStudioPlugin::modifyQuery(fn ($query) => $query);
 ```
 
-## Architecture
-
-Filament Studio uses **EAV (Entity-Attribute-Value) storage** — data is stored across four core tables instead of creating a table per collection:
-
-| Table | Purpose |
-|-------|---------|
-| `studio_collections` | Schema definitions (name, slug, settings) |
-| `studio_fields` | Field definitions per collection (type, settings, validation) |
-| `studio_records` | Record entries (UUID, collection, tenant) |
-| `studio_values` | Typed data storage (text, integer, decimal, boolean, datetime, JSON columns) |
-
-This approach enables runtime schema changes without migrations while preserving native database sorting and type safety through typed storage columns.
+---
 
 ## Documentation
 
+**New to Studio, or handing it to a non-technical team?** Start with the **[User Guide](docs/user-guide/README.md)** — a plain-language, screenshot-led walkthrough written for the people who use the panel, not the people who install it.
+
 | Guide | Description |
 |-------|-------------|
+| [User Guide](docs/user-guide/README.md) | Plain-language walkthrough for editors and administrators |
 | [Installation](docs/installation.md) | Requirements, setup, and verification |
 | [Configuration](docs/configuration.md) | Config file, plugin options, feature flags |
 | [Field Types](docs/field-types.md) | All 33 built-in types, EAV storage, field settings |
 | [Dashboards & Panels](docs/dashboards.md) | Dashboard builder, 9 panel types, variables |
 | [Filtering](docs/filtering.md) | 23 operators, filter trees, saved filters |
 | [REST API](docs/api.md) | Endpoints, authentication, permissions, rate limiting |
-| [MCP Server](docs/mcp.md) | AI assistant integration — 34 tools, stdio & HTTP transport, auth, rate limiting |
-| [Flows](docs/flows.md) | Workflow automation — triggers, operations, versioning, webhook security, REST API |
+| [MCP Server](docs/mcp.md) | AI assistant integration — 34 tools, stdio & HTTP transport |
+| [Flows](docs/flows.md) | Workflow automation — triggers, operations, versioning, webhook security |
 | [Conditional Logic](docs/conditional-logic.md) | Dynamic visibility, required, and disabled states |
 | [Authorization](docs/authorization.md) | Policies, permissions, Spatie integration |
 | [Multi-Tenancy](docs/multi-tenancy.md) | Tenant scoping, lifecycle hooks |
@@ -339,17 +293,104 @@ This approach enables runtime schema changes without migrations while preserving
 | [Custom Panel Types](docs/extending/custom-panel-types.md) | Building your own dashboard panels |
 | [Extending Flows](docs/extending/flows.md) | Building your own operations and triggers |
 
+---
+
 ## Requirements
 
 - PHP 8.3+
 - Laravel 11+
 - Filament v5
 
-## Testing
+---
 
-```bash
-vendor/bin/pest
-```
+## Screenshot gallery
+
+<details>
+<summary>Collections list</summary>
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/collections-list.png" alt="Collections List" />
+</details>
+
+<details>
+<summary>Create a collection</summary>
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/create-collection-basic-info.png" alt="Create Collection" />
+</details>
+
+<details>
+<summary>Fields list</summary>
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/fields-list.png" alt="Fields List" />
+</details>
+
+<details>
+<summary>Field editor</summary>
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/field-editor.png" alt="Field Editor" />
+</details>
+
+<details>
+<summary>Records list</summary>
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/records-list.png" alt="Records List" />
+</details>
+
+<details>
+<summary>Record editor</summary>
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/record-edit.png" alt="Record Editor" />
+</details>
+
+<details>
+<summary>Advanced filter builder</summary>
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/advanced-filter.png" alt="Advanced Filter Builder" />
+</details>
+
+<details>
+<summary>Version history</summary>
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/version-history.png" alt="Version History" />
+</details>
+
+<details>
+<summary>Dashboard</summary>
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/dashboard-view.png" alt="Dashboard" />
+</details>
+
+<details>
+<summary>Dashboard editor</summary>
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/dashboard-editor.png" alt="Dashboard Editor" />
+</details>
+
+<details>
+<summary>Flows list</summary>
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/flows-list.png" alt="Flows List" />
+</details>
+
+<details>
+<summary>Flow designer canvas</summary>
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/flow-designer.png" alt="Flow Designer Canvas" />
+</details>
+
+<details>
+<summary>Flow run history</summary>
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/flow-runs.png" alt="Flow Run History" />
+</details>
+
+<details>
+<summary>API keys</summary>
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/api-keys-list.png" alt="API Keys List" />
+</details>
+
+<details>
+<summary>API key editor</summary>
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/api-key-editor.png" alt="API Key Editor" />
+</details>
+
+<details>
+<summary>API documentation</summary>
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/api-documentation.png" alt="API Documentation" />
+</details>
+
+<details>
+<summary>Roles &amp; permissions</summary>
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/roles-list.png" alt="Roles and Permissions" />
+</details>
+
+---
 
 ## Changelog
 

@@ -25,3 +25,8 @@ testbench.yaml
 
 # AI-generated plans
 docs/superpowers/
+
+# Agent tooling state
+/.agents/
+/.codex
+/.serena/
