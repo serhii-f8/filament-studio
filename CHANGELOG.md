@@ -5,6 +5,22 @@ All notable changes to Filament Studio will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - 2026-09-08
+
+### Fixed
+
+- **Graph edges without a `sourceHandle` no longer dead-end silently.** `GraphWalker::successors()`
+  matched the branch handle exactly, so an edge stored as `{source, target}` — the shape produced
+  by hand-written graphs, seeders, and the REST API — never matched the `success` branch the engine
+  asks for. The walk stopped at the trigger and the run was recorded as **completed in 0 ms with
+  zero steps**, giving no indication that nothing had run. A missing or null `sourceHandle` is now
+  treated as a success edge.
+
+  Graphs built in the flow designer were never affected — its nodes declare named `success` and
+  `failure` handles, so every edge it draws carries one. Existing published graphs are unchanged;
+  this only makes previously inert edges execute as intended. Fixes both normal runs
+  (`FlowWorkflow`) and step-through debugging (`StepThroughExecutor`), which share the walker.
+
 ## [1.7.0] - 2026-09-08
 
 ### Removed
@@ -293,7 +309,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Configurable Table Prefix** to avoid naming conflicts
 - **Migration Log Tracking** for schema change auditing
 
-[Unreleased]: https://github.com/serhii-f8/filament-studio/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/serhii-f8/filament-studio/compare/v1.7.1...HEAD
+[1.7.1]: https://github.com/serhii-f8/filament-studio/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/serhii-f8/filament-studio/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/serhii-f8/filament-studio/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/serhii-f8/filament-studio/compare/v1.5.0...v1.5.1

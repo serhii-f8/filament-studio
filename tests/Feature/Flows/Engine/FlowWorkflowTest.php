@@ -169,3 +169,34 @@ it('deduplicates nodes in a diamond fan-join pattern', function () {
     expect($run->steps()->where('operation_key', 'join')->count())->toBe(1);
     expect($run->fresh()->status)->toBe(FlowRunStatus::Completed);
 });
+
+it('executes operations reached by edges that omit sourceHandle', function () {
+    $flow = StudioFlow::factory()->create();
+    $version = StudioFlowVersion::factory()->for($flow, 'flow')->published()->create([
+        'graph' => [
+            'nodes' => [
+                ['id' => 'trigger', 'type' => 'trigger', 'data' => ['triggerType' => 'manual']],
+                ['id' => 'op_a', 'type' => 'operation', 'data' => ['key' => 'a', 'operationType' => 'noop', 'config' => ['v' => 1]]],
+            ],
+            // No sourceHandle — previously this dead-ended and the run
+            // completed with zero steps and no indication anything was wrong.
+            'edges' => [
+                ['id' => 'e1', 'source' => 'trigger', 'target' => 'op_a'],
+            ],
+        ],
+    ]);
+    $run = StudioFlowRun::factory()->for($flow, 'flow')->create([
+        'flow_version_id' => $version->id,
+        'status' => FlowRunStatus::Pending,
+    ]);
+
+    app(FlowWorkflow::class)->run($run->id);
+
+    $run = $run->fresh();
+    expect($run->status)->toBe(FlowRunStatus::Completed);
+
+    $steps = $run->steps()->get();
+    expect($steps)->toHaveCount(1);
+    expect($steps[0]->operation_key)->toBe('a');
+    expect($steps[0]->status)->toBe(FlowRunStepStatus::Completed);
+});

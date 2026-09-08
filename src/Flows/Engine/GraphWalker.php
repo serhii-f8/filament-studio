@@ -49,7 +49,13 @@ class GraphWalker
     {
         $matches = collect($graph['edges'] ?? [])->where('source', $sourceId);
         if ($branch !== null) {
-            $matches = $matches->where('sourceHandle', $branch);
+            // An edge with no sourceHandle is unconditional: the designer names
+            // every handle, but graphs written by hand, by a seeder, or through
+            // the API routinely omit it. Treat those as success edges rather
+            // than dead-ending the walk silently.
+            $matches = $matches->filter(
+                fn (array $edge): bool => ($edge['sourceHandle'] ?? 'success') === $branch,
+            );
         }
 
         return $matches->pluck('target')->all();
