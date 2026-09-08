@@ -9,7 +9,7 @@
 ## Install via Composer
 
 ```bash
-composer require flexpik/filament-studio
+composer require serhii-f8/filament-studio
 ```
 
 ## Publish & Run Migrations

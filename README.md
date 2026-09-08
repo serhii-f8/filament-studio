@@ -1,12 +1,12 @@
 <p align="center">
-    <img class="filament-hidden" src="https://raw.githubusercontent.com/flexpik/filament-studio/main/art/preview.png" alt="Filament Studio — Plugin Preview" style="width: 100%; max-width: 800px;" />
+    <img class="filament-hidden" src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/preview.png" alt="Filament Studio — Plugin Preview" style="width: 100%; max-width: 800px;" />
 </p>
 
 <p align="center">
-    <a href="https://packagist.org/packages/flexpik/filament-studio"><img src="https://img.shields.io/packagist/v/flexpik/filament-studio.svg?style=flat-square" alt="Latest Version on Packagist"></a>
-    <a href="https://packagist.org/packages/flexpik/filament-studio"><img src="https://img.shields.io/packagist/dt/flexpik/filament-studio.svg?style=flat-square" alt="Total Downloads"></a>
-    <a href="https://github.com/flexpik/filament-studio/actions"><img src="https://img.shields.io/github/actions/workflow/status/flexpik/filament-studio/tests.yml?branch=main&label=tests&style=flat-square" alt="Tests"></a>
-    <a href="https://github.com/flexpik/filament-studio/blob/main/LICENSE.md"><img src="https://img.shields.io/packagist/l/flexpik/filament-studio.svg?style=flat-square" alt="License"></a>
+    <a href="https://packagist.org/packages/serhii-f8/filament-studio"><img src="https://img.shields.io/packagist/v/serhii-f8/filament-studio.svg?style=flat-square" alt="Latest Version on Packagist"></a>
+    <a href="https://packagist.org/packages/serhii-f8/filament-studio"><img src="https://img.shields.io/packagist/dt/serhii-f8/filament-studio.svg?style=flat-square" alt="Total Downloads"></a>
+    <a href="https://github.com/serhii-f8/filament-studio/actions"><img src="https://img.shields.io/github/actions/workflow/status/serhii-f8/filament-studio/tests.yml?branch=main&label=tests&style=flat-square" alt="Tests"></a>
+    <a href="https://github.com/serhii-f8/filament-studio/blob/main/LICENSE.md"><img src="https://img.shields.io/packagist/l/serhii-f8/filament-studio.svg?style=flat-square" alt="License"></a>
 </p>
 
 # Filament Studio
@@ -19,77 +19,77 @@ Filament Studio turns your Filament admin panel into a flexible data platform. D
 
 <details>
 <summary>Collections list</summary>
-<img src="https://raw.githubusercontent.com/flexpik/filament-studio/main/art/collections-list.png" alt="Collections List" />
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/collections-list.png" alt="Collections List" />
 </details>
 
 <details>
 <summary>Create collection — Basic Info</summary>
-<img src="https://raw.githubusercontent.com/flexpik/filament-studio/main/art/create-collection-basic-info.png" alt="Create Collection — Basic Info" />
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/create-collection-basic-info.png" alt="Create Collection — Basic Info" />
 </details>
 
 <details>
 <summary>Create collection — System Fields</summary>
-<img src="https://raw.githubusercontent.com/flexpik/filament-studio/main/art/create-collection-system-fields.png" alt="Create Collection — System Fields" />
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/create-collection-system-fields.png" alt="Create Collection — System Fields" />
 </details>
 
 <details>
 <summary>Create collection — Settings</summary>
-<img src="https://raw.githubusercontent.com/flexpik/filament-studio/main/art/create-collection-settings.png" alt="Create Collection — Settings" />
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/create-collection-settings.png" alt="Create Collection — Settings" />
 </details>
 
 <details>
 <summary>Fields list</summary>
-<img src="https://raw.githubusercontent.com/flexpik/filament-studio/main/art/fields-list.png" alt="Fields List" />
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/fields-list.png" alt="Fields List" />
 </details>
 
 <details>
 <summary>Field editor</summary>
-<img src="https://raw.githubusercontent.com/flexpik/filament-studio/main/art/field-editor.png" alt="Field Editor" />
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/field-editor.png" alt="Field Editor" />
 </details>
 
 <details>
 <summary>Advanced filter builder</summary>
-<img src="https://raw.githubusercontent.com/flexpik/filament-studio/main/art/advanced-filter.png" alt="Advanced Filter Builder" />
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/advanced-filter.png" alt="Advanced Filter Builder" />
 </details>
 
 <details>
 <summary>Version history</summary>
-<img src="https://raw.githubusercontent.com/flexpik/filament-studio/main/art/version-history.png" alt="Version History" />
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/version-history.png" alt="Version History" />
 </details>
 
 <details>
 <summary>Dashboard editor</summary>
-<img src="https://raw.githubusercontent.com/flexpik/filament-studio/main/art/dashboard-editor.png" alt="Dashboard Editor" />
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/dashboard-editor.png" alt="Dashboard Editor" />
 </details>
 
 <details>
 <summary>API Keys</summary>
-<img src="https://raw.githubusercontent.com/flexpik/filament-studio/main/art/api-keys-list.png" alt="API Keys List" />
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/api-keys-list.png" alt="API Keys List" />
 </details>
 
 <details>
 <summary>API Key editor</summary>
-<img src="https://raw.githubusercontent.com/flexpik/filament-studio/main/art/api-key-editor.png" alt="API Key Editor" />
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/api-key-editor.png" alt="API Key Editor" />
 </details>
 
 <details>
 <summary>API Documentation</summary>
-<img src="https://raw.githubusercontent.com/flexpik/filament-studio/main/art/api-documentation.png" alt="API Documentation" />
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/api-documentation.png" alt="API Documentation" />
 </details>
 
 <details>
 <summary>Collection permissions</summary>
-<img src="https://raw.githubusercontent.com/flexpik/filament-studio/main/art/collection-permissions.png" alt="Collection Permissions" />
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/collection-permissions.png" alt="Collection Permissions" />
 </details>
 
 <details>
 <summary>Flow editor</summary>
-<img src="https://raw.githubusercontent.com/flexpik/filament-studio/main/art/flow-editor.png" alt="Flow Editor" />
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/flow-editor.png" alt="Flow Editor" />
 </details>
 
 <details>
 <summary>Flow designer canvas</summary>
-<img src="https://raw.githubusercontent.com/flexpik/filament-studio/main/art/flow-designer.png" alt="Flow Designer Canvas" />
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/flow-designer.png" alt="Flow Designer Canvas" />
 </details>
 
 ## Why Filament Studio?
@@ -218,7 +218,7 @@ Policy-based access control with granular per-collection permissions. When `spat
 ### Install
 
 ```bash
-composer require flexpik/filament-studio
+composer require serhii-f8/filament-studio
 ```
 
 ### Publish & Migrate
@@ -365,7 +365,7 @@ If you discover a security vulnerability, please send an email to the maintainer
 
 ## Credits
 
-- [Flexpik](https://github.com/flexpik)
+- [Flexpik](https://github.com/serhii-f8)
 - [All Contributors](../../contributors)
 
 ## License

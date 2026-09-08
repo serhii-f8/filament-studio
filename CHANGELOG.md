@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Package renamed to `serhii-f8/filament-studio`.** The repository moved to
+  [github.com/serhii-f8/filament-studio](https://github.com/serhii-f8/filament-studio) and the Composer package
+  follows it. The PHP namespace is unchanged — `Flexpik\FilamentStudio\` stays exactly as it is, so **no code
+  changes are required**: your imports, config keys, table prefixes, and published assets all keep working.
+
+  To upgrade:
+
+  ```bash
+  composer remove flexpik/filament-studio
+  composer require serhii-f8/filament-studio
+  ```
+
+  The new package declares `replace: { "flexpik/filament-studio": "self.version" }`, so any dependency still
+  requiring the old name resolves against the new one and the two can never be installed side by side.
+  Releases up to and including v1.4.2 remain available under the old name; everything from here on is published
+  under the new one.
+- Repository, issue tracker, homepage, and documentation links now point at the `serhii-f8` account. The old
+  GitHub URLs redirect, so existing links continue to resolve.
+- Copyright holder in `LICENSE` and `LICENSE.md` updated to Serhii Fedorenko. The license itself is unchanged (MIT).
+
 ## [1.4.2] - 2026-08-29
 
 ### Changed
@@ -43,8 +65,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Widened `laravel/mcp` to `^0.3 || ^0.8`, `spatie/laravel-permission` to `^7.2 || ^8.0`, and `orchestra/testbench` (dev) to `^10.0 || ^11.0`, so the package also installs alongside these dependencies' newer major versions ([#5](https://github.com/flexpik/filament-studio/pull/5), [#4](https://github.com/flexpik/filament-studio/pull/4), [#2](https://github.com/flexpik/filament-studio/pull/2)).
-- Bumped `actions/checkout` from v4 to v7 in the test workflow ([#6](https://github.com/flexpik/filament-studio/pull/6)).
+- Widened `laravel/mcp` to `^0.3 || ^0.8`, `spatie/laravel-permission` to `^7.2 || ^8.0`, and `orchestra/testbench` (dev) to `^10.0 || ^11.0`, so the package also installs alongside these dependencies' newer major versions ([#5](https://github.com/serhii-f8/filament-studio/pull/5), [#4](https://github.com/serhii-f8/filament-studio/pull/4), [#2](https://github.com/serhii-f8/filament-studio/pull/2)).
+- Bumped `actions/checkout` from v4 to v7 in the test workflow ([#6](https://github.com/serhii-f8/filament-studio/pull/6)).
 
 ## [1.3.1] - 2026-08-29
 
@@ -200,10 +222,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Configurable Table Prefix** to avoid naming conflicts
 - **Migration Log Tracking** for schema change auditing
 
-[Unreleased]: https://github.com/flexpik/filament-studio/compare/v1.2.0...HEAD
-[1.2.0]: https://github.com/flexpik/filament-studio/compare/v1.1.0...v1.2.0
-[1.1.0]: https://github.com/flexpik/filament-studio/compare/v1.0.4...v1.1.0
-[1.0.3]: https://github.com/flexpik/filament-studio/compare/v1.0.2...v1.0.3
-[1.0.2]: https://github.com/flexpik/filament-studio/compare/v1.0.1...v1.0.2
-[1.0.1]: https://github.com/flexpik/filament-studio/compare/v1.0.0...v1.0.1
-[1.0.0]: https://github.com/flexpik/filament-studio/releases/tag/v1.0.0
+[Unreleased]: https://github.com/serhii-f8/filament-studio/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/serhii-f8/filament-studio/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/serhii-f8/filament-studio/compare/v1.0.4...v1.1.0
+[1.0.3]: https://github.com/serhii-f8/filament-studio/compare/v1.0.2...v1.0.3
+[1.0.2]: https://github.com/serhii-f8/filament-studio/compare/v1.0.1...v1.0.2
+[1.0.1]: https://github.com/serhii-f8/filament-studio/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/serhii-f8/filament-studio/releases/tag/v1.0.0

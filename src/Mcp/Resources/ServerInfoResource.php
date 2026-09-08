@@ -24,12 +24,13 @@ class ServerInfoResource extends Resource
     protected string $uri = 'studio://info';
 
     protected string $mimeType = 'application/json';
+
     public function handle(Request $request): Response
     {
         $key = app(StudioApiKeyContext::class)->current();
 
         $payload = [
-            'package' => 'flexpik/filament-studio',
+            'package' => 'serhii-f8/filament-studio',
             'version' => $this->packageVersion(),
             'mcp_protocol_version' => '2024-11-05',
             'features' => [
