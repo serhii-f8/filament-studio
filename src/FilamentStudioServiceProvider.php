@@ -118,6 +118,7 @@ class FilamentStudioServiceProvider extends PackageServiceProvider
                 'z_alter_studio_flows_add_webhook_auth_mode',
                 'create_studio_flow_audit_log_table',
                 'z_add_observability_columns_to_flow_runs_and_steps',
+                'z_add_duration_ms_to_flow_run_steps',
             ])
             ->hasViews();
     }

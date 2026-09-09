@@ -38,6 +38,16 @@ class FlowContext
         return $this->accountability;
     }
 
+    /**
+     * The resolved secret values, for scrubbing them back out of persisted logs.
+     *
+     * @return array<int, string>
+     */
+    public function secretValues(): array
+    {
+        return array_values(array_map('strval', $this->secrets));
+    }
+
     public function set(string $operationKey, mixed $output): void
     {
         $this->outputs[$operationKey] = $output;
@@ -64,26 +74,34 @@ class FlowContext
         ] + $this->outputs;
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * Secrets are deliberately absent: a paused step-through run parks this in the
+     * cache store, and plaintext credentials should not live there. The caller
+     * re-resolves them from the flow when it resumes.
+     *
+     * @return array<string, mixed>
+     */
     public function toCache(): array
     {
         return [
             'trigger' => $this->trigger,
             'accountability' => $this->accountability,
-            'secrets' => $this->secrets,
             'dry_run' => $this->dryRun,
             'outputs' => $this->outputs,
             'last' => $this->last,
         ];
     }
 
-    /** @param array<string, mixed> $data */
-    public static function fromCache(array $data): self
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  array<string, string>  $secrets  re-resolved, never read from the cache
+     */
+    public static function fromCache(array $data, array $secrets = []): self
     {
         $ctx = new self(
             $data['trigger'] ?? [],
             $data['accountability'] ?? [],
-            $data['secrets'] ?? [],
+            $secrets,
             (bool) ($data['dry_run'] ?? false),
         );
 

@@ -14,11 +14,17 @@ class HmacWebhookVerifier
      *
      * Signed string format: "{timestamp}.{rawBody}"
      *
-     * @throws InvalidWebhookSignatureException if sig or timestamp is empty, or signature does not match
+     * @throws InvalidWebhookSignatureException if the secret, sig or timestamp is empty, or signature does not match
      * @throws StaleWebhookTimestampException if the timestamp is outside the configured window
      */
     public function verify(string $body, string $sig, string $timestamp, string $secret): bool
     {
+        if ($secret === '') {
+            // Without this guard an unconfigured flow verifies against hash_hmac(..., ''),
+            // which any caller can compute — an unauthenticated endpoint that looks signed.
+            throw new InvalidWebhookSignatureException('Webhook secret is not configured for this flow.');
+        }
+
         if ($sig === '' || $timestamp === '') {
             throw new InvalidWebhookSignatureException('Missing webhook signature or timestamp.');
         }

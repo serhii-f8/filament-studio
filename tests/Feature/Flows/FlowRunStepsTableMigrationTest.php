@@ -11,7 +11,7 @@ it('creates the studio_flow_run_steps table', function () {
     foreach ([
         'id', 'flow_run_id', 'operation_key', 'operation_type', 'attempt_number',
         'status', 'input', 'output', 'error_message', 'error_trace',
-        'error_class', 'branch_taken', 'started_at', 'finished_at',
+        'error_class', 'branch_taken', 'started_at', 'finished_at', 'duration_ms',
     ] as $column) {
         expect(Schema::hasColumn($table, $column))->toBeTrue("missing column {$column}");
     }

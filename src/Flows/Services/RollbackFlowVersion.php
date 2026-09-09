@@ -18,13 +18,19 @@ class RollbackFlowVersion
             throw new RuntimeException('version_belongs_to_other_flow');
         }
 
+        $flow->auditEvent = 'rolled_back';
+
         $flow->forceFill([
             'draft_graph' => $target->graph,
             'draft_updated_at' => now(),
         ])->save();
 
+        // fresh() drops the in-memory hint, so re-apply it for the publish half.
+        $restored = $flow->fresh();
+        $restored->auditEvent = 'rolled_back';
+
         return $this->publisher->publish(
-            $flow->fresh(),
+            $restored,
             changeSummary: "Restored from v{$target->version}",
             publishedBy: $publishedBy,
         );

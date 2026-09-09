@@ -13,7 +13,7 @@ class ScheduleTriggerConfig implements FlowTriggerConfig
     {
         return [
             'fields' => [
-                ['name' => 'cron_expression', 'type' => 'text', 'label' => 'Cron Expression'],
+                ['name' => 'cron', 'type' => 'text', 'label' => 'Cron Expression'],
                 ['name' => 'timezone', 'type' => 'text', 'label' => 'Timezone'],
             ],
         ];
@@ -22,7 +22,7 @@ class ScheduleTriggerConfig implements FlowTriggerConfig
     /** @return array<string, mixed> */
     public function defaults(): array
     {
-        return ['cron_expression' => '0 * * * *', 'timezone' => 'UTC'];
+        return ['cron' => '0 * * * *', 'timezone' => 'UTC'];
     }
 
     /** @param array<string, mixed> $config */

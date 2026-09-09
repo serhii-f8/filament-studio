@@ -8,6 +8,7 @@ use Flexpik\FilamentStudio\Contracts\Flows\FlowOperation;
 use Flexpik\FilamentStudio\Contracts\Flows\OperationContext;
 use Flexpik\FilamentStudio\Contracts\Flows\OperationResult;
 use Flexpik\FilamentStudio\Flows\Engine\FlowDispatcher;
+use Flexpik\FilamentStudio\Flows\Enums\FlowRunStatus;
 use Flexpik\FilamentStudio\Flows\Models\StudioFlow;
 
 class TriggerFlowActivity implements FlowOperation
@@ -36,11 +37,21 @@ class TriggerFlowActivity implements FlowOperation
         if (($config['mode'] ?? 'async') === 'sync') {
             $childRun = $this->dispatcher->dispatchSync($flow, 'flow', $payload, $newAccountability);
 
-            return OperationResult::success([
+            $output = [
                 'flow_run_id' => $childRun->id,
                 'status' => $childRun->status->value,
                 'dispatched' => false,
-            ]);
+            ];
+
+            // A synchronous call knows how the child ended, so surface it the way
+            // http_request surfaces an error response: take the failure branch and
+            // let the graph decide. Without this the parent reported success while
+            // its child had failed.
+            if ($childRun->status === FlowRunStatus::Failed) {
+                return OperationResult::withBranch('failure', $output);
+            }
+
+            return OperationResult::success($output);
         }
 
         $childRun = $this->dispatcher->dispatchAsync($flow, 'flow', $payload, $newAccountability);

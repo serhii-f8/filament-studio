@@ -51,10 +51,10 @@ export const operationConfigSchemas: Record<string, { name: string; schema: Fiel
 
 export const triggerConfigSchemas: Record<string, { name: string; schema: FieldSchema }[]> = {
     manual: [],
-    webhook: [
-        { name: 'auth_mode', schema: { type: 'enum', label: 'Auth', options: ['none', 'bearer', 'hmac'] } },
-        { name: 'response_mode', schema: { type: 'enum', label: 'Response', options: ['async', 'sync'] } },
-    ],
+    // Webhook auth, secret, API-key allowlist and redact paths are properties of
+    // the flow record, edited in FlowResource's "Webhook Security" section — not
+    // of the trigger node. See WebhookTriggerConfig.
+    webhook: [],
     collection_event: [
         { name: 'collection', schema: { type: 'collection_select', label: 'Collection', options: [] } },
         { name: 'events', schema: { type: 'json', label: 'Events (array)' } },

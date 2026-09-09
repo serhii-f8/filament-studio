@@ -36,7 +36,10 @@ class StudioDashboardPage extends Page
         $separator = config('filament-shield.permissions.separator', ':');
 
         try {
-            return $user->hasPermissionTo("View{$separator}StudioDashboardPage");
+            // Defer to the same permission StudioDashboardPolicy::viewAny() checks.
+            // This used to demand View:StudioDashboardPage — a name the package
+            // never registers, so the page was unreachable for every user.
+            return $user->hasPermissionTo("ViewAny{$separator}StudioDashboard");
         } catch (PermissionDoesNotExist) {
             return false;
         }

@@ -23,6 +23,15 @@ class StudioFlow extends Model
 
     protected $guarded = ['id'];
 
+    /**
+     * Lifecycle event name for the next audit-log entry this flow writes.
+     *
+     * The observer logs every save, so without a hint a draft save, a publish and
+     * a rollback all recorded the same generic "updated". Services set this
+     * immediately before their save; StudioFlowObserver consumes and clears it.
+     */
+    public ?string $auditEvent = null;
+
     protected $attributes = [
         'status' => FlowStatus::Inactive->value,
     ];

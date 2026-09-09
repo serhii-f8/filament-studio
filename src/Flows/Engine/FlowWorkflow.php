@@ -15,6 +15,7 @@ use Flexpik\FilamentStudio\Flows\Models\StudioFlowRun;
 use Flexpik\FilamentStudio\Flows\Models\StudioFlowRunStep;
 use Flexpik\FilamentStudio\Flows\Operations\OperationRegistry;
 use Flexpik\FilamentStudio\Flows\Security\MasksSensitiveValues;
+use Flexpik\FilamentStudio\Flows\Services\ResolveFlowSecrets;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use RuntimeException;
@@ -45,6 +46,7 @@ class FlowWorkflow
         private TemplateEngine $templates,
         private GraphWalker $walker,
         private MasksSensitiveValues $masker,
+        private ResolveFlowSecrets $secrets,
     ) {}
 
     public function run(string $flowRunId): void
@@ -63,6 +65,7 @@ class FlowWorkflow
         $context = FlowContext::make(
             trigger: $run->trigger_payload ?? [],
             accountability: $run->accountability ?? [],
+            secrets: $this->secrets->for($run->flow),
             dryRun: $dryRun,
         );
 
@@ -130,12 +133,13 @@ class FlowWorkflow
         // --- Dry-run: side-effect ops are skipped entirely ---
         if ($dryRun && in_array($type, self::SIDE_EFFECT_TYPES, true)) {
             $step = StudioFlowRunStep::create([
+                'duration_ms' => 0,
                 'flow_run_id' => $run->id,
                 'operation_key' => $key,
                 'operation_type' => $type,
                 'attempt_number' => 1,
                 'status' => FlowRunStepStatus::Skipped,
-                'input' => $logging === LoggingMode::Disabled ? null : $this->masker->mask((array) $resolvedConfig),
+                'input' => $logging === LoggingMode::Disabled ? null : $this->masker->mask((array) $resolvedConfig, $context->secretValues()),
                 'output' => ['log' => "[dry-run] would have called {$type}"],
                 'branch_taken' => 'success',
                 'started_at' => now(),
@@ -157,12 +161,13 @@ class FlowWorkflow
             };
 
             StudioFlowRunStep::create([
+                'duration_ms' => 0,
                 'flow_run_id' => $run->id,
                 'operation_key' => $key,
                 'operation_type' => $type,
                 'attempt_number' => 1,
                 'status' => FlowRunStepStatus::Completed,
-                'input' => $logging === LoggingMode::Disabled ? null : $this->masker->mask((array) $resolvedConfig),
+                'input' => $logging === LoggingMode::Disabled ? null : $this->masker->mask((array) $resolvedConfig, $context->secretValues()),
                 'output' => $logging === LoggingMode::Disabled ? null : $syntheticOutput,
                 'branch_taken' => 'success',
                 'started_at' => now(),
@@ -178,13 +183,15 @@ class FlowWorkflow
         $maxAttempts = $retryCount + 1;
 
         for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            $attemptStartedAt = microtime(true);
+
             $step = StudioFlowRunStep::create([
                 'flow_run_id' => $run->id,
                 'operation_key' => $key,
                 'operation_type' => $type,
                 'attempt_number' => $attempt,
                 'status' => FlowRunStepStatus::Running,
-                'input' => $logging === LoggingMode::Disabled ? null : $this->masker->mask((array) $resolvedConfig),
+                'input' => $logging === LoggingMode::Disabled ? null : $this->masker->mask((array) $resolvedConfig, $context->secretValues()),
                 'started_at' => now(),
             ]);
 
@@ -219,9 +226,10 @@ class FlowWorkflow
 
                 $step->forceFill([
                     'status' => FlowRunStepStatus::Completed,
-                    'output' => $logging === LoggingMode::Disabled ? null : $this->masker->mask($output),
+                    'output' => $logging === LoggingMode::Disabled ? null : $this->masker->mask($output, $context->secretValues()),
                     'branch_taken' => $branch,
                     'finished_at' => now(),
+                    'duration_ms' => $this->elapsedMs($attemptStartedAt),
                 ])->save();
 
                 return $branch;
@@ -232,6 +240,7 @@ class FlowWorkflow
                     'error_message' => substr($e->getMessage(), 0, 255),
                     'error_trace' => $logging === LoggingMode::Full ? $e->getTraceAsString() : null,
                     'finished_at' => now(),
+                    'duration_ms' => $this->elapsedMs($attemptStartedAt),
                 ])->save();
 
                 if ($attempt >= $maxAttempts) {
@@ -243,6 +252,17 @@ class FlowWorkflow
         // This line is unreachable — the loop always returns or throws.
         // It satisfies static analysis for the return type.
         return 'success'; // @codeCoverageIgnore
+    }
+
+    /**
+     * Milliseconds elapsed since a microtime(true) mark.
+     *
+     * Measured here rather than derived from started_at/finished_at, which are
+     * second-precision timestamp columns and read as 0ms for a fast step.
+     */
+    private function elapsedMs(float $startedAt): int
+    {
+        return (int) round((microtime(true) - $startedAt) * 1000);
     }
 
     /**

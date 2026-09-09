@@ -15,6 +15,7 @@ use Flexpik\FilamentStudio\Flows\Models\StudioFlowRun;
 use Flexpik\FilamentStudio\Flows\Models\StudioFlowRunStep;
 use Flexpik\FilamentStudio\Flows\Operations\OperationRegistry;
 use Flexpik\FilamentStudio\Flows\Security\MasksSensitiveValues;
+use Flexpik\FilamentStudio\Flows\Services\ResolveFlowSecrets;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -31,6 +32,7 @@ class StepThroughExecutor
         private TemplateEngine $templates,
         private GraphWalker $walker,
         private MasksSensitiveValues $masker,
+        private ResolveFlowSecrets $secrets,
     ) {}
 
     /**
@@ -65,6 +67,7 @@ class StepThroughExecutor
         $context = FlowContext::make(
             trigger: $run->trigger_payload ?? [],
             accountability: $run->accountability ?? [],
+            secrets: $this->secrets->for($run->flow),
             dryRun: $dryRun,
         );
 
@@ -111,7 +114,8 @@ class StepThroughExecutor
 
         $queue = $state['queue'];
         $seen = $state['seen'];
-        $context = FlowContext::fromCache($state['context']);
+        // Secrets are never cached; resolve them again for the resumed leg.
+        $context = FlowContext::fromCache($state['context'], $this->secrets->for($run->flow));
         $graph = $state['graph'];
         $startedAtMs = $state['started_at_ms'];
         $loggingMode = LoggingMode::from($state['logging_mode']);
@@ -237,7 +241,7 @@ class StepThroughExecutor
                 'operation_type' => $type,
                 'attempt_number' => 1,
                 'status' => FlowRunStepStatus::Skipped,
-                'input' => $logging === LoggingMode::Disabled ? null : $this->masker->mask((array) $resolvedConfig),
+                'input' => $logging === LoggingMode::Disabled ? null : $this->masker->mask((array) $resolvedConfig, $context->secretValues()),
                 'output' => ['log' => "[dry-run] would have called {$type}"],
                 'branch_taken' => 'success',
                 'started_at' => now(),
@@ -264,7 +268,7 @@ class StepThroughExecutor
                 'operation_type' => $type,
                 'attempt_number' => 1,
                 'status' => FlowRunStepStatus::Completed,
-                'input' => $logging === LoggingMode::Disabled ? null : $this->masker->mask((array) $resolvedConfig),
+                'input' => $logging === LoggingMode::Disabled ? null : $this->masker->mask((array) $resolvedConfig, $context->secretValues()),
                 'output' => $logging === LoggingMode::Disabled ? null : $syntheticOutput,
                 'branch_taken' => 'success',
                 'started_at' => now(),
@@ -286,7 +290,7 @@ class StepThroughExecutor
                 'operation_type' => $type,
                 'attempt_number' => $attempt,
                 'status' => FlowRunStepStatus::Running,
-                'input' => $logging === LoggingMode::Disabled ? null : $this->masker->mask((array) $resolvedConfig),
+                'input' => $logging === LoggingMode::Disabled ? null : $this->masker->mask((array) $resolvedConfig, $context->secretValues()),
                 'started_at' => now(),
             ]);
 
@@ -321,7 +325,7 @@ class StepThroughExecutor
 
                 $step->forceFill([
                     'status' => FlowRunStepStatus::Completed,
-                    'output' => $logging === LoggingMode::Disabled ? null : $this->masker->mask($output),
+                    'output' => $logging === LoggingMode::Disabled ? null : $this->masker->mask($output, $context->secretValues()),
                     'branch_taken' => $branch,
                     'finished_at' => now(),
                 ])->save();

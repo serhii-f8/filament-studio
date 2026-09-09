@@ -78,3 +78,36 @@ it('shows "Ran on draft (inline snapshot)" for test runs', function () {
     Livewire::test(ViewFlowRun::class, ['record' => $flow->id, 'runId' => $run->id])
         ->assertSee('Ran on draft (inline snapshot)');
 });
+
+it('lists steps in execution order when they share a started_at timestamp', function () {
+    $this->actingAs($this->makeUserWith(['view_flows']));
+
+    $flow = StudioFlow::factory()->withPublishedVersion()->create();
+    $run = StudioFlowRun::factory()->for($flow, 'flow')->create([
+        'status' => FlowRunStatus::Completed,
+    ]);
+
+    // Sub-second runs give every step the same second-precision started_at, so
+    // execution order can only come from the monotonic UUIDv7 primary key.
+    $sameSecond = now();
+    $executionOrder = [
+        'zeta_runs_first' => (string) Str::uuid7($sameSecond->copy()->subSecond()),
+        'mid_runs_second' => (string) Str::uuid7($sameSecond),
+        'alpha_runs_last' => (string) Str::uuid7($sameSecond->copy()->addSecond()),
+    ];
+
+    // Insert physically in alphabetical order so neither the insertion order nor
+    // the (flow_run_id, operation_key) index can accidentally produce the right answer.
+    foreach (['alpha_runs_last', 'mid_runs_second', 'zeta_runs_first'] as $key) {
+        StudioFlowRunStep::factory()->for($run, 'run')->create([
+            'id' => $executionOrder[$key],
+            'operation_key' => $key,
+            'status' => FlowRunStepStatus::Completed,
+            'started_at' => $sameSecond,
+            'finished_at' => $sameSecond,
+        ]);
+    }
+
+    Livewire::test(ViewFlowRun::class, ['record' => $flow->id, 'runId' => $run->id])
+        ->assertSeeInOrder(['zeta_runs_first', 'mid_runs_second', 'alpha_runs_last']);
+});

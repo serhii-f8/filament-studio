@@ -21,7 +21,10 @@ class StudioFlowObserver
     {
         $dirty = array_diff_key($flow->getDirty(), array_flip(self::SENSITIVE_KEYS));
 
-        $this->writeAuditLog($flow, 'updated', $dirty);
+        $event = $flow->auditEvent ?? 'updated';
+        $flow->auditEvent = null;
+
+        $this->writeAuditLog($flow, $event, $dirty);
     }
 
     public function deleted(StudioFlow $flow): void

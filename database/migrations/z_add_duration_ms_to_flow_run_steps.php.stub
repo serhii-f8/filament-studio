@@ -1,0 +1,40 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+/**
+ * Adds the measured step duration.
+ *
+ * started_at/finished_at are second-precision timestamps, so a sub-second step
+ * reads as 0ms when the duration is derived from them. The engine measures the
+ * elapsed time itself and stores it here, the same way runs already do.
+ *
+ * Also added to the create_studio_flow_run_steps_table stub, so this is a no-op
+ * on fresh installs.
+ */
+return new class extends Migration
+{
+    public function up(): void
+    {
+        $steps = config('filament-studio.table_prefix', 'studio_').'flow_run_steps';
+
+        if (Schema::hasTable($steps) && ! Schema::hasColumn($steps, 'duration_ms')) {
+            Schema::table($steps, function (Blueprint $table) {
+                $table->unsignedInteger('duration_ms')->nullable()->after('finished_at');
+            });
+        }
+    }
+
+    public function down(): void
+    {
+        $steps = config('filament-studio.table_prefix', 'studio_').'flow_run_steps';
+
+        if (Schema::hasTable($steps) && Schema::hasColumn($steps, 'duration_ms')) {
+            Schema::table($steps, function (Blueprint $table) {
+                $table->dropColumn('duration_ms');
+            });
+        }
+    }
+};

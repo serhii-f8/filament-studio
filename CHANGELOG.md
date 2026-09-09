@@ -5,6 +5,112 @@ All notable changes to Filament Studio will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-09-09
+
+Found by running the Flows engine end-to-end against a real Laravel host app — real HTTPS webhook
+deliveries, a real queue worker, a real MySQL database and the panel driven in a browser — rather
+than only through the test suite. Fourteen defects surfaced, none of which the existing suite
+covered. Every fix below ships with a test written to fail first.
+
+### Security
+
+- **Webhook HMAC verification could be satisfied without knowing the secret.** `webhook_auth_mode`
+  defaults to `hmac`, but the secret was only generated when the *trigger node config* carried
+  `auth_mode: hmac` — and `WebhookTriggerConfig` never declared such a field, so the ordinary path
+  left `webhook_secret` NULL. `HmacWebhookVerifier` then verified against `(string) null === ''`,
+  and any caller could compute `hash_hmac('sha256', "{ts}.{body}", '')`. An endpoint that presented
+  as signed accepted unsigned traffic. The verifier now rejects an empty secret outright, and
+  `WebhookTrigger::register()` reads the authoritative `webhook_auth_mode` column, so a flow in
+  HMAC mode always has a secret. **Check any flow whose webhook was reachable: if
+  `webhook_secret` was NULL while `webhook_auth_mode` was `hmac`, that endpoint was effectively
+  public.**
+
+- **`webhook_redact_paths` did not cover the stored raw body.** Redaction and key-pattern masking
+  reached only the parsed `body`/`headers`, so a value scrubbed from `body` was still persisted
+  verbatim under `trigger_payload.raw` on the run. `raw` is now re-encoded from the sanitized body
+  whenever the body parsed.
+
+- **Flow secrets were never injected.** `studio_flow_secrets` rows existed and decrypted, and
+  `FlowContext` had a `$secrets` slot, but the engine never populated it — `{{ $secrets.KEY }}`
+  always rendered empty, so anyone relying on it was sending an empty credential. See *Added*.
+
+### Added
+
+- **Flow secrets now reach operation configs.** A new `ResolveFlowSecrets` service loads a flow's
+  encrypted secrets as `key => value`; both `FlowWorkflow` and `StepThroughExecutor` inject them,
+  and `{{ $secrets.KEY }}` resolves. Three properties come with it: resolved secret values are
+  scrubbed out of every string leaf before a step is persisted (key patterns alone cannot protect a
+  secret interpolated into a URL or an innocuously named field); `FlowContext::toCache()` no longer
+  carries secrets, since a paused step-through run parks that blob in the cache store; and a
+  sub-flow resolves its own secrets, so a parent never lends credentials to a flow it triggers.
+
+- **`studio_flow_run_steps.duration_ms`**, measured by the engine. `started_at`/`finished_at` are
+  second-precision timestamps, so a sub-second step always rendered as `0ms`. The run detail page
+  falls back to the timestamp delta for steps recorded before this column existed.
+
+### Fixed
+
+- **`collection_event` triggers silently stopped firing after any cache flush.**
+  `EventSubscriptionRegistry` stored subscriptions with `Cache::forever`, but "forever" in a cache
+  store is not durability: a deploy running `php artisan optimize:clear`, an eviction, or a
+  restarted cache server emptied the index, and every collection-event flow stopped firing with
+  nothing logged and nothing shown in the UI. Recovery required re-publishing each flow. The cache
+  is now a read-through index over the published versions that declare a `collection_event`
+  trigger, and a missing entry rebuilds from the database.
+
+- **The flows REST API was unreachable whenever the collection API was also enabled.** The
+  collection routes are a one- and two-segment catch-all under the same prefix, so
+  `GET /api/studio/flows` resolved to `StudioApiController@index` and
+  `GET /api/studio/webhooks/{slug}` answered with the collection guard's 401 instead of 405. Which
+  API answered depended purely on service-provider boot order.
+  `StudioApiRouteRegistrar::RESERVED_SEGMENTS` (`flows`, `webhooks`) now constrains
+  `{collection_slug}`. **A collection slugged `flows` or `webhooks` is no longer addressable
+  through the collection API.**
+
+- **The Studio Dashboard page was unreachable for every user.** `StudioDashboardPage::canAccess()`
+  required `View:StudioDashboardPage`, a permission name registered nowhere in the package, so the
+  page and its navigation items returned 403 on any install using spatie/laravel-permission. It now
+  checks `ViewAny:StudioDashboard`, matching `StudioDashboardPolicy::viewAny()`.
+
+- **Form-encoded webhook bodies silently produced empty records.** The controller parsed the body
+  only when `$request->isJson()`, so an `application/x-www-form-urlencoded` delivery left `body` a
+  raw string, `{{ $trigger.body.x }}` resolved to `''`, and the run *completed successfully* having
+  written a blank record. Form-encoded bodies are now parsed; anything else stays a raw string and
+  remains reachable through the payload's `raw` key.
+
+- **The run detail timeline listed steps out of execution order.** Sorting used `started_at` alone,
+  which is second-precision, so every step of a fast run tied and the order fell through to the
+  `(flow_run_id, operation_key)` index — alphabetical. It now tie-breaks on the monotonic UUIDv7
+  primary key.
+
+- **A synchronous `trigger_flow` swallowed child failures.** The parent step reported success
+  regardless of how the child run ended. A failed child now takes the `failure` branch, matching how
+  `http_request` surfaces an error response.
+
+- **Trigger config schemas disagreed with the runtime that reads them**, so a flow configured from
+  its own declared schema did not work:
+  - `CollectionEventTriggerConfig` declared `collection_id` + `event`; the trigger reads
+    `collection` + `events`. Such a flow never subscribed.
+  - `ScheduleTriggerConfig` declared `cron_expression`; the trigger and the dispatch command read
+    `cron`. Such a flow **failed to publish** with `Invalid cron expression:`.
+  - `WebhookTriggerConfig` declared `secret_key` + `expected_method`, neither of which anything
+    reads. The webhook node now declares no config at all: auth mode, secret, API-key allowlist and
+    redact paths are properties of the flow record, edited in `FlowResource`'s Webhook Security
+    section. The designer's `triggerConfigSchemas.webhook` was emptied to match, and
+    `WebhookTrigger::register()` no longer consults node config, leaving one source of truth.
+
+- **The audit log recorded `updated` for every lifecycle change.** Draft saves, publishes and
+  rollbacks were indistinguishable except by inspecting metadata. They now record `draft_saved`,
+  `published` and `rolled_back`.
+
+### Upgrading
+
+Run `php artisan migrate` to add `studio_flow_run_steps.duration_ms`. No configuration changes are
+required. Two behaviour changes to be aware of: a collection slugged `flows` or `webhooks` is no
+longer reachable through the collection REST API, and a webhook flow in HMAC mode with no secret
+now returns 401 rather than accepting the request — publish the flow again to have its secret
+generated.
+
 ## [1.7.1] - 2026-09-08
 
 ### Fixed

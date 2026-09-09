@@ -45,6 +45,8 @@ class PublishFlowVersion
                 'created_at' => now(),
             ]);
 
+            $flow->auditEvent ??= 'published';
+
             $flow->forceFill([
                 'published_version_id' => $version->id,
                 'draft_graph' => null,

@@ -23,10 +23,18 @@
                                     <span class="ml-2 text-xs text-gray-500">Attempt {{ $step->attempt_number }}</span>
                                 @endif
                             </div>
+                            @php
+                                // Fall back to the timestamp delta for steps recorded before
+                                // duration_ms existed; those columns are second-precision.
+                                $durationMs = $step->duration_ms
+                                    ?? ($step->started_at && $step->finished_at
+                                        ? $step->finished_at->diffInMilliseconds($step->started_at)
+                                        : null);
+                            @endphp
                             <div class="text-xs">
                                 {{ $step->status?->value }}
-                                @if ($step->started_at && $step->finished_at)
-                                    — {{ $step->finished_at->diffInMilliseconds($step->started_at) }}ms
+                                @if ($durationMs !== null)
+                                    — {{ $durationMs }}ms
                                 @endif
                             </div>
                         </div>

@@ -33,7 +33,7 @@ class ViewFlowRun extends Page
     }
 
     /**
-     * Return steps grouped by operation_key, sorted by started_at, with masked I/O.
+     * Return steps grouped by operation_key, in execution order, with masked I/O.
      * Each group is an array of attempts (sorted by attempt_number).
      *
      * @return Collection<string, Collection<int, object>>
@@ -47,7 +47,9 @@ class ViewFlowRun extends Page
         $masker = app(MasksSensitiveValues::class);
 
         return $this->run->steps
-            ->sortBy('started_at')
+            // started_at is second-precision, so every step of a sub-second run ties;
+            // the UUIDv7 primary key is monotonic and breaks the tie by execution order.
+            ->sortBy([['started_at', 'asc'], ['id', 'asc']])
             ->map(function ($step) use ($masker) {
                 $step->masked_input = $step->input ? $masker->mask((array) $step->input) : null;
                 $step->masked_output = $step->output ? $masker->mask((array) $step->output) : null;

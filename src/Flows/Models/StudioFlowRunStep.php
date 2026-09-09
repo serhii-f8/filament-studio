@@ -34,6 +34,7 @@ class StudioFlowRunStep extends Model
             'input' => 'array',
             'output' => 'array',
             'attempt_number' => 'integer',
+            'duration_ms' => 'integer',
             'error_class' => 'string',
             'branch_taken' => 'string',
             'started_at' => 'datetime',

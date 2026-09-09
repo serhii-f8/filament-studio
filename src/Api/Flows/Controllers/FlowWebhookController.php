@@ -64,12 +64,13 @@ class FlowWebhookController
             'method' => $request->method(),
             'headers' => $request->headers->all(),
             'query' => $request->query->all(),
-            'body' => $request->isJson() ? $request->json()->all() : $rawBody,
+            'body' => $this->decodeBody($request, $rawBody),
             'raw' => $rawBody,
         ];
 
         $payload = $this->applyRedactPaths($payload, $flow->webhook_redact_paths ?? []);
         $payload = $this->masker->mask($payload);
+        $payload['raw'] = $this->sanitizedRaw($payload['body'], $rawBody);
 
         try {
             $run = $this->dispatcher->dispatchAsync(
@@ -86,6 +87,49 @@ class FlowWebhookController
         }
 
         return response()->json(['data' => ['flow_run_id' => $run->id]], 202);
+    }
+
+    /**
+     * Decode the request body into something templates can address.
+     *
+     * JSON and form-encoded senders both get an array; anything else stays a raw
+     * string, which is still reachable through the payload's `raw` key.
+     */
+    private function decodeBody(Request $request, string $rawBody): array|string
+    {
+        if ($request->isJson()) {
+            return $request->json()->all();
+        }
+
+        if (str_contains((string) $request->header('Content-Type', ''), 'application/x-www-form-urlencoded')) {
+            parse_str($rawBody, $parsed);
+
+            if ($parsed !== []) {
+                return $parsed;
+            }
+        }
+
+        $formParams = $request->request->all();
+
+        return $formParams !== [] ? $formParams : $rawBody;
+    }
+
+    /**
+     * Keep `raw` consistent with the redacted and masked body.
+     *
+     * Redact paths and key-pattern masking only reach the parsed body, so a value
+     * scrubbed from `body` used to survive verbatim in `raw` — and both are
+     * persisted on the run. Re-encoding from the sanitized body closes that. A
+     * body we could not parse has no paths to redact, so it passes through: do
+     * not send secrets in a body shape the webhook cannot decode.
+     */
+    private function sanitizedRaw(array|string $sanitizedBody, string $rawBody): string
+    {
+        if (is_string($sanitizedBody)) {
+            return $rawBody;
+        }
+
+        return json_encode($sanitizedBody, JSON_UNESCAPED_SLASHES) ?: $rawBody;
     }
 
     /** @param  array<int, string>  $paths */

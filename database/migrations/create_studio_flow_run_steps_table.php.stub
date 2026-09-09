@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('branch_taken')->nullable();
             $table->timestamp('started_at')->nullable();
             $table->timestamp('finished_at')->nullable();
+            $table->unsignedInteger('duration_ms')->nullable();
 
             $table->index(['flow_run_id', 'operation_key']);
         });

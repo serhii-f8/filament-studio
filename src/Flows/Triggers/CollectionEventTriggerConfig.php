@@ -13,8 +13,8 @@ class CollectionEventTriggerConfig implements FlowTriggerConfig
     {
         return [
             'fields' => [
-                ['name' => 'collection_id', 'type' => 'text', 'label' => 'Collection ID'],
-                ['name' => 'event', 'type' => 'select', 'label' => 'Event'],
+                ['name' => 'collection', 'type' => 'text', 'label' => 'Collection Slug'],
+                ['name' => 'events', 'type' => 'code', 'label' => 'Events'],
             ],
         ];
     }
@@ -22,7 +22,7 @@ class CollectionEventTriggerConfig implements FlowTriggerConfig
     /** @return array<string, mixed> */
     public function defaults(): array
     {
-        return ['event' => 'created'];
+        return ['events' => ['created']];
     }
 
     /** @param array<string, mixed> $config */
