@@ -55,3 +55,48 @@ it('rejects an expired token', function () {
     expect(fn () => $this->store->consume($token, 'delete_collection', ['slug' => 'products'], 1))
         ->toThrow(ConfirmTokenInvalidException::class);
 });
+
+it('reports a reused token as consumed, not expired', function () {
+    $token = $this->issuer->issue('delete_collection', ['slug' => 'products'], 1)['token'];
+    $this->store->consume($token, 'delete_collection', ['slug' => 'products'], 1);
+
+    try {
+        $this->store->consume($token, 'delete_collection', ['slug' => 'products'], 1);
+        $this->fail('Expected ConfirmTokenInvalidException');
+    } catch (ConfirmTokenInvalidException $e) {
+        expect($e->mcpCode())->toBe('CONSUMED_CONFIRM_TOKEN');
+    }
+});
+
+it('reports a consumed token as consumed even when replayed against another target', function () {
+    $token = $this->issuer->issue('delete_collection', ['slug' => 'products'], 1)['token'];
+    $this->store->consume($token, 'delete_collection', ['slug' => 'products'], 1);
+
+    try {
+        $this->store->consume($token, 'delete_collection', ['slug' => 'orders'], 1);
+        $this->fail('Expected ConfirmTokenInvalidException');
+    } catch (ConfirmTokenInvalidException $e) {
+        expect($e->mcpCode())->toBe('CONSUMED_CONFIRM_TOKEN');
+    }
+});
+
+it('does not reveal a consumed token to another tenant', function () {
+    $token = $this->issuer->issue('delete_collection', ['slug' => 'products'], 1)['token'];
+    $this->store->consume($token, 'delete_collection', ['slug' => 'products'], 1);
+
+    try {
+        $this->store->consume($token, 'delete_collection', ['slug' => 'products'], 2);
+        $this->fail('Expected ConfirmTokenInvalidException');
+    } catch (ConfirmTokenInvalidException $e) {
+        expect($e->mcpCode())->toBe('EXPIRED_CONFIRM_TOKEN');
+    }
+});
+
+it('still reports a never-issued token as expired', function () {
+    try {
+        $this->store->consume('ct_doesnotexist', 'delete_collection', ['slug' => 'products'], 1);
+        $this->fail('Expected ConfirmTokenInvalidException');
+    } catch (ConfirmTokenInvalidException $e) {
+        expect($e->mcpCode())->toBe('EXPIRED_CONFIRM_TOKEN');
+    }
+});

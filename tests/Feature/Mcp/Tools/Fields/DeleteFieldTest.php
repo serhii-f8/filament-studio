@@ -44,3 +44,21 @@ it('rejects expired or invalid token', function () {
 
     expect(StudioField::count())->toBe(1);
 });
+
+it('tells the agent a reused token was already consumed', function () {
+    $c = StudioCollection::factory()->create(['slug' => 'products', 'tenant_id' => 1]);
+    StudioField::factory()->for($c, 'collection')->create(['column_name' => 'sku', 'tenant_id' => 1]);
+    $key = StudioApiKey::factory()
+        ->withPermissions(['_studio' => ['manage_collections']])
+        ->forTenant(1)
+        ->create();
+    $token = (new ConfirmTokenIssuer(new ConfirmTokenStore))
+        ->issue('delete_field', ['collection_slug' => 'products', 'column_name' => 'sku'], 1)['token'];
+    $args = ['collection_slug' => 'products', 'column_name' => 'sku', 'confirm_token' => $token];
+
+    mcpCallTool($key, DeleteFieldTool::class, $args)->assertSee('"deleted"');
+
+    mcpCallTool($key, DeleteFieldTool::class, $args)
+        ->assertSee('CONSUMED_CONFIRM_TOKEN')
+        ->assertDontSee('EXPIRED_CONFIRM_TOKEN');
+});

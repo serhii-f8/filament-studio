@@ -35,6 +35,12 @@ class ConfirmTokenStore
     public function consume(string $token, string $expectedOperation, array $expectedTarget, ?int $tenantId): array
     {
         $key = $this->key($tenantId, $token);
+        $consumedKey = $key.':consumed';
+
+        if (Cache::has($consumedKey)) {
+            throw ConfirmTokenInvalidException::consumed($token);
+        }
+
         $payload = Cache::get($key);
 
         if ($payload === null) {
@@ -43,6 +49,14 @@ class ConfirmTokenStore
 
         if ($payload['operation'] !== $expectedOperation || $payload['target'] !== $expectedTarget || $payload['tenant_id'] !== $tenantId) {
             throw ConfirmTokenInvalidException::mismatched($token);
+        }
+
+        // Leave a marker behind so a replay learns the operation already ran, rather
+        // than being told the token expired. `add` is atomic, so of two concurrent
+        // calls with the same token only one gets past this line.
+        $ttl = (int) config('filament-studio.mcp.confirm_token_ttl', 300);
+        if (! Cache::add($consumedKey, true, $ttl)) {
+            throw ConfirmTokenInvalidException::consumed($token);
         }
 
         Cache::forget($key);

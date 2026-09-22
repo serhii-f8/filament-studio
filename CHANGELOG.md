@@ -5,6 +5,20 @@ All notable changes to Filament Studio will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.1] - 2026-09-22
+
+### Fixed
+
+- **A reused MCP confirm token was reported as expired rather than consumed.** Consuming a token
+  deleted its cache entry, so a second `studio_delete_collection` / `studio_delete_field` /
+  `studio_delete_dashboard` call with the same token found nothing and returned
+  `EXPIRED_CONFIRM_TOKEN` — telling the agent to preview and retry an operation that had already
+  run. `ConfirmTokenInvalidException::consumed()` existed and was unit-tested but was never thrown.
+  Consuming a token now leaves a tenant-scoped marker for the token's TTL, and a replay returns
+  `CONSUMED_CONFIRM_TOKEN`. The marker is claimed with an atomic `Cache::add`, so two concurrent
+  calls with one token can no longer both pass validation. A token from another tenant still
+  reports as expired, revealing nothing.
+
 ## [1.8.0] - 2026-09-09
 
 Found by running the Flows engine end-to-end against a real Laravel host app — real HTTPS webhook
@@ -415,7 +429,9 @@ generated.
 - **Configurable Table Prefix** to avoid naming conflicts
 - **Migration Log Tracking** for schema change auditing
 
-[Unreleased]: https://github.com/serhii-f8/filament-studio/compare/v1.7.1...HEAD
+[Unreleased]: https://github.com/serhii-f8/filament-studio/compare/v1.8.1...HEAD
+[1.8.1]: https://github.com/serhii-f8/filament-studio/compare/v1.8.0...v1.8.1
+[1.8.0]: https://github.com/serhii-f8/filament-studio/compare/v1.7.1...v1.8.0
 [1.7.1]: https://github.com/serhii-f8/filament-studio/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/serhii-f8/filament-studio/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/serhii-f8/filament-studio/compare/v1.5.1...v1.6.0
