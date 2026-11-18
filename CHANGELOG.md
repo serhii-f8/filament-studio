@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-11-18
+
 ### Fixed
 
 - **The Status system field had no options** ([#11](https://github.com/serhii-f8/filament-studio/issues/11)).
@@ -30,7 +32,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **A new data model returned 403 to the user who created it.** Its four
   `studio.collection.{slug}.*` permissions were created but granted to nobody. The creator now gets
   them (only when spatie/laravel-permission is installed; a guard mismatch is logged, never fatal).
-- **Select and Radio table columns showed the stored value instead of the option label.**
+- **Select and Radio table columns showed the stored value instead of the option label**, and
+  ignored the option's colour. Badges now show the label in the option's colour (Filament colour
+  name or hex).
+- **`vendor:publish --tag=filament-studio-migrations` followed by `migrate` failed with "table
+  already exists"** — the step the README told every new user to run. The package auto-loads its
+  migrations, so published copies ran a second time under different names. Stubs the app has
+  published are now skipped by the auto-loader; newer, unpublished ones still load.
+- **Dashboard panels lost their grid width on the first poll.** The span was set on a protected
+  property in `mount()`, which Livewire does not persist, so every panel snapped to full width
+  after the first refresh. Widgets now read it from the stored panel on every render.
+- **The meter panel drew a black ring and no progress arc.** Its view relied on Tailwind classes
+  that are not in the host panel's CSS, and a Filament colour name such as `success` was passed to
+  SVG as-is. It now uses inline styles, maps Filament colour names to theme variables, and shows
+  the percentage with value / maximum.
+- **Pie and bar charts drew every slice and bar in the same pale colour** and labelled groups with
+  stored values. They now use a distinct palette and option labels.
+- **List panels ignored their sort order, and a display template with more than one placeholder
+  (`{{name}} — {{company}}`) showed record IDs.** `EavQueryBuilder::toEloquentQuery()` now applies
+  `orderBy()`, and `VariableResolver` only treats a string as a variable when it is exactly one
+  placeholder. List columns use field labels instead of `ucfirst()` of the column name.
+- **Flow, run and step status badges were all the same colour.** The status enums now implement
+  Filament's `HasColor` / `HasLabel` (completed = green, failed = red, and so on).
+
+### Changed
+
+- The field editor's Options list is full width with a compact table layout.
+- Long textarea values are clamped to two lines in tables.
+- New README screenshots and preview image, taken from the plugin running in a real app.
 
 ### Upgrading
 
@@ -464,7 +493,8 @@ generated.
 - **Configurable Table Prefix** to avoid naming conflicts
 - **Migration Log Tracking** for schema change auditing
 
-[Unreleased]: https://github.com/serhii-f8/filament-studio/compare/v1.8.1...HEAD
+[Unreleased]: https://github.com/serhii-f8/filament-studio/compare/v1.9.0...HEAD
+[1.9.0]: https://github.com/serhii-f8/filament-studio/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/serhii-f8/filament-studio/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/serhii-f8/filament-studio/compare/v1.7.1...v1.8.0
 [1.7.1]: https://github.com/serhii-f8/filament-studio/compare/v1.7.0...v1.7.1
