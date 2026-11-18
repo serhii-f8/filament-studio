@@ -15,6 +15,14 @@
 
 Filament Studio adds a visual data model manager to any Filament v5 panel. Your team (or your client) creates collections and fields through the admin UI, and Studio generates the forms, tables, filters, dashboards, REST API and automations for them — at runtime, with no migration and no deploy.
 
+<p align="center">
+    <a href="#quick-start"><b>Quick start</b></a> ·
+    <a href="#see-it-in-action"><b>Screenshots</b></a> ·
+    <a href="#what-you-get"><b>Features</b></a> ·
+    <a href="docs/user-guide/README.md"><b>User guide</b></a> ·
+    <a href="#documentation"><b>Docs</b></a>
+</p>
+
 ---
 
 ## The problem
@@ -57,19 +65,30 @@ Every "just one more field" request stops being a deploy. The schema becomes dat
 
 ## See it in action
 
-**Define a collection's fields through the UI — no migration:**
+<table>
+<tr>
+<td width="50%" valign="top">
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/records-list.png" alt="Generated records table with coloured status badges" />
+<p><b>A full CRUD screen per collection</b><br>Forms, tables, badges and filters, generated from the fields your users define.</p>
+</td>
+<td width="50%" valign="top">
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/dashboard-view-dark.png" alt="Sales dashboard with metrics, a meter, a donut chart and a bar chart" />
+<p><b>Dashboards without widget classes</b><br>Metrics, meters, charts and lists, assembled from a panel picker. Light and dark mode.</p>
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/flow-designer.png" alt="Flow designer canvas with a trigger, a condition and a webhook step" />
+<p><b>Automation on a visual canvas</b><br>Triggers, conditions, HTTP calls and emails — versioned, dry-runnable, observable.</p>
+</td>
+<td width="50%" valign="top">
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/advanced-filter.png" alt="Advanced filter builder with two rules joined by AND" />
+<p><b>Filters for real questions</b><br>Nested AND/OR groups over 23 operators, saved and shared with the team.</p>
+</td>
+</tr>
+</table>
 
-![Fields list](https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/fields-list.png)
-
-**Every collection gets a full CRUD interface, generated from those fields:**
-
-![Records list](https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/records-list.png)
-
-**Data changes can trigger real automation, designed on a visual canvas:**
-
-![Flow designer](https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/flow-designer.png)
-
-<sub>More screenshots in the [gallery](#screenshot-gallery) at the bottom, and step-by-step walkthroughs in the [User Guide](docs/user-guide/README.md).</sub>
+<sub>Every image is a real screenshot of the plugin running in a Laravel app. More in the [gallery](#screenshot-gallery), and step-by-step walkthroughs in the [User Guide](docs/user-guide/README.md).</sub>
 
 ---
 
@@ -99,9 +118,10 @@ Studio and hand-written resources coexist fine in one panel — use each where i
 
 ```bash
 composer require serhii-f8/filament-studio
-php artisan vendor:publish --tag="filament-studio-migrations"
 php artisan migrate
 ```
+
+Studio's migrations load automatically. Publishing them (`vendor:publish --tag="filament-studio-migrations"`) is only needed if you want to edit them; anything you publish is skipped by the auto-loader, so nothing runs twice.
 
 Register the plugin on your panel:
 
@@ -140,7 +160,9 @@ php artisan vendor:publish --tag="filament-studio-config"
 
 ### Collections and fields, defined at runtime
 
-Create a collection, add fields, and Studio generates the form, table, filters and validation. Fields can be reordered, made required or unique, hidden from forms or tables, and shown conditionally based on other values.
+Create a collection, add fields, and Studio generates the form, table, filters and validation. Fields can be reordered, made required or unique, hidden from forms or tables, and shown conditionally based on other values. Select-style fields get their choices from an options list right in the field editor.
+
+<p align="center"><img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/field-editor.png" alt="Field editor showing type-specific settings and the options list for a Status select" width="560" /></p>
 
 **33 field types across 9 categories:**
 
@@ -160,6 +182,8 @@ Create a collection, add fields, and Studio generates the form, table, filters a
 
 Non-developers assemble dashboards from a panel picker — no widget classes to write. **9 panel types** (Metric, List, Time Series, Bar, Line, Pie, Meter, Label, Variable) can be placed on dashboards, collection pages or record pages, with aggregate functions and dynamic variables like `$CURRENT_USER` and `$NOW`.
 
+<p align="center"><img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/dashboard-view.png" alt="Sales Overview dashboard in light mode" /></p>
+
 ### Filtering that survives real questions
 
 A visual filter builder with **23 operators** and nested AND/OR groups, so "customers in Germany who are either overdue or high-value" is a filter, not a support ticket. Operators adapt to the field type, and useful filters can be saved and shared with the team.
@@ -175,6 +199,8 @@ Data changes can start real work. Triggers (manual, webhook, collection event, c
 - **Draft → publish versioning** — edit a live draft, dry-run and step through it, then publish an immutable, restorable version
 - **Full observability** — every run records a step tree of inputs, outputs, timing and status
 - **Security by default** — HMAC-signed, rate-limited, IP-allowlisted webhooks; dangerous operations need explicit publish-time confirmation; sensitive values are masked before logs are written
+
+<p align="center"><img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/flow-runs.png" alt="Run history for a flow, with completed and failed runs and their durations" /></p>
 
 Flows are opt-in via `flows.enabled`. See the [Flows documentation](docs/flows.md).
 
@@ -207,7 +233,7 @@ A built-in [Model Context Protocol](https://modelcontextprotocol.io/) server let
 
 ## Proof it works
 
-- **1,784 tests** across unit, feature and integration suites (Pest v4 + Orchestra Testbench)
+- **1,860+ tests** across unit, feature and integration suites (Pest v4 + Orchestra Testbench)
 - **Mutation-tested** — an MSI target of ≥80% per module, not just line coverage
 - **CI on PHP 8.3 and 8.4** on every push
 
@@ -316,6 +342,11 @@ FilamentStudioPlugin::modifyQuery(fn ($query) => $query);
 </details>
 
 <details>
+<summary>Choose system fields</summary>
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/create-collection-system-fields.png" alt="Create collection wizard, system fields step" />
+</details>
+
+<details>
 <summary>Fields list</summary>
 <img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/fields-list.png" alt="Fields List" />
 </details>
@@ -348,6 +379,11 @@ FilamentStudioPlugin::modifyQuery(fn ($query) => $query);
 <details>
 <summary>Dashboard</summary>
 <img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/dashboard-view.png" alt="Dashboard" />
+</details>
+
+<details>
+<summary>Dashboard (dark mode)</summary>
+<img src="https://raw.githubusercontent.com/serhii-f8/filament-studio/main/art/dashboard-view-dark.png" alt="Dashboard in dark mode" />
 </details>
 
 <details>

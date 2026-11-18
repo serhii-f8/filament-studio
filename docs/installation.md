@@ -12,12 +12,15 @@
 composer require serhii-f8/filament-studio
 ```
 
-## Publish & Run Migrations
+## Run Migrations
 
 ```bash
-php artisan vendor:publish --tag="filament-studio-migrations"
 php artisan migrate
 ```
+
+Studio's migrations load automatically from the package, so there is nothing to publish. If you want
+to edit them, `php artisan vendor:publish --tag="filament-studio-migrations"` copies them into
+`database/migrations`; the auto-loader then skips every migration you published, so none runs twice.
 
 This creates the following tables (prefixed with `studio_` by default):
 
