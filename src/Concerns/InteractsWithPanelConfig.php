@@ -21,10 +21,22 @@ trait InteractsWithPanelConfig
         $this->panel = $panel;
         $this->variables = $variables;
         $this->recordUuid = $recordUuid;
+    }
 
-        if ($panel->placement->isDashboard()) {
-            $this->columnSpan = $panel->grid_col_span;
+    /**
+     * Read the span from the persisted panel on every render. Setting the protected $columnSpan in
+     * mount() only lasted for the first request: Livewire doesn't persist protected properties, so
+     * the first poll reset every dashboard panel to full width.
+     *
+     * @return int|string|array<string, int|string|null>
+     */
+    public function getColumnSpan(): int|string|array
+    {
+        if (isset($this->panel) && $this->panel->placement->isDashboard()) {
+            return $this->panel->grid_col_span;
         }
+
+        return parent::getColumnSpan();
     }
 
     protected function config(string $key, mixed $default = null): mixed

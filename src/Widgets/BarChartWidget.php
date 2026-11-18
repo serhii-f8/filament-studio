@@ -4,6 +4,7 @@ namespace Flexpik\FilamentStudio\Widgets;
 
 use Filament\Widgets\ChartWidget;
 use Flexpik\FilamentStudio\Concerns\InteractsWithPanelConfig;
+use Flexpik\FilamentStudio\Concerns\PresentsGroupedChart;
 use Flexpik\FilamentStudio\Enums\AggregateFunction;
 use Flexpik\FilamentStudio\Models\StudioCollection;
 use Flexpik\FilamentStudio\Models\StudioPanel;
@@ -12,6 +13,7 @@ use Flexpik\FilamentStudio\Services\EavQueryBuilder;
 class BarChartWidget extends ChartWidget
 {
     use InteractsWithPanelConfig;
+    use PresentsGroupedChart;
 
     protected int|string|array $columnSpan = 'full';
 
@@ -62,8 +64,9 @@ class BarChartWidget extends ChartWidget
             ->tenant($this->panel->tenant_id)
             ->aggregateByGroup($function, $valueField, $groupField);
 
-        $labels = $rows->keys()->all();
+        $labels = $this->groupLabels($collection, $groupField, $rows->keys()->all());
         $values = $rows->values()->all();
+        $colours = $this->chartColours(count($values));
 
         return [
             'labels' => $labels,
@@ -71,6 +74,10 @@ class BarChartWidget extends ChartWidget
                 [
                     'label' => $this->panel->header_label ?? '',
                     'data' => $values,
+                    'backgroundColor' => $colours,
+                    'borderColor' => $colours,
+                    'borderRadius' => 6,
+                    'maxBarThickness' => 64,
                 ],
             ],
         ];

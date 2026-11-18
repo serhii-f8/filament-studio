@@ -152,3 +152,26 @@ it('supports multiple orderBy clauses', function () {
         ->and($items[3]->name)->toBe('Cherry')
         ->and($items[2]->price)->toBeLessThan($items[3]->price);
 });
+
+it('applies orderBy to the Eloquent query used by list panels and tables', function () {
+    $prices = EavQueryBuilder::for($this->collection)
+        ->tenant(1)
+        ->orderBy('price', 'asc')
+        ->toEloquentQuery()
+        ->get()
+        ->pluck('price')
+        ->map(fn ($p) => (float) $p)
+        ->all();
+
+    expect($prices)->toBe([10.0, 20.0, 30.0]);
+
+    $names = EavQueryBuilder::for($this->collection)
+        ->tenant(1)
+        ->orderBy('name', 'desc')
+        ->toEloquentQuery()
+        ->get()
+        ->pluck('name')
+        ->all();
+
+    expect($names)->toBe(['Cherry', 'Banana', 'Apple']);
+});

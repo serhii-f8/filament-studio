@@ -124,20 +124,7 @@ class EavQueryBuilder
         $query = $this->buildBaseQuery();
 
         // Apply sorting
-        foreach ($this->orderBys as $orderBy) {
-            $field = $this->resolveField($orderBy['field']);
-            if ($field) {
-                $cast = $field->eav_cast;
-                $query->orderBy(
-                    StudioValue::query()
-                        ->select($cast->column())
-                        ->whereColumn("{$this->valuesTable}.record_id", "{$this->recordsTable}.id")
-                        ->where("{$this->valuesTable}.field_id", $field->id)
-                        ->limit(1),
-                    $orderBy['direction']
-                );
-            }
-        }
+        $this->applyOrderBys($query);
 
         $records = $query
             ->select(["{$this->recordsTable}.id", "{$this->recordsTable}.uuid", "{$this->recordsTable}.created_at", "{$this->recordsTable}.updated_at"])
@@ -161,20 +148,7 @@ class EavQueryBuilder
         $query = $this->buildBaseQuery();
 
         // Apply sorting
-        foreach ($this->orderBys as $orderBy) {
-            $field = $this->resolveField($orderBy['field']);
-            if ($field) {
-                $cast = $field->eav_cast;
-                $query->orderBy(
-                    StudioValue::query()
-                        ->select($cast->column())
-                        ->whereColumn("{$this->valuesTable}.record_id", "{$this->recordsTable}.id")
-                        ->where("{$this->valuesTable}.field_id", $field->id)
-                        ->limit(1),
-                    $orderBy['direction']
-                );
-            }
-        }
+        $this->applyOrderBys($query);
 
         // Get total count
         $total = (clone $query)->count();
@@ -878,7 +852,27 @@ class EavQueryBuilder
             ]);
         }
 
+        $this->applyOrderBys($query);
+
         return $query;
+    }
+
+    protected function applyOrderBys(Builder $query): void
+    {
+        foreach ($this->orderBys as $orderBy) {
+            $field = $this->resolveField($orderBy['field']);
+            if ($field) {
+                $cast = $field->eav_cast;
+                $query->orderBy(
+                    StudioValue::query()
+                        ->select($cast->column())
+                        ->whereColumn("{$this->valuesTable}.record_id", "{$this->recordsTable}.id")
+                        ->where("{$this->valuesTable}.field_id", $field->id)
+                        ->limit(1),
+                    $orderBy['direction']
+                );
+            }
+        }
     }
 
     /**

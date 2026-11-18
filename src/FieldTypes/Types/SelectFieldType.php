@@ -6,6 +6,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Component;
+use Filament\Support\Colors\Color;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\BaseFilter;
@@ -93,17 +94,22 @@ class SelectFieldType extends AbstractFieldType
 
     public function toTableColumn(): ?Column
     {
-        $labels = null;
+        $options = null;
+        // Loaded once per column, on first render, not when the table is built.
+        $option = function (mixed $state) use (&$options): ?StudioFieldOption {
+            $options ??= StudioFieldOption::where('field_id', $this->field->id)->get()->keyBy('value');
+
+            return $options->get((string) $state);
+        };
 
         return TextColumn::make($this->field->column_name)
             ->badge()
-            ->formatStateUsing(function (mixed $state) use (&$labels): string {
-                // Loaded once per column, on first render, not when the table is built.
-                $labels ??= StudioFieldOption::where('field_id', $this->field->id)
-                    ->pluck('label', 'value')
-                    ->all();
+            ->formatStateUsing(fn (mixed $state): string => (string) ($option($state)?->label ?? $state))
+            ->color(function (mixed $state) use ($option): string|array {
+                $color = $option($state)?->color ?: 'primary';
 
-                return (string) ($labels[$state] ?? $state);
+                // Option colours may be Filament names ("success") or hex values set via API/MCP.
+                return str_starts_with($color, '#') ? Color::hex($color) : $color;
             });
     }
 

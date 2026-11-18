@@ -9,6 +9,7 @@ use Flexpik\FilamentStudio\Concerns\InteractsWithPanelConfig;
 use Flexpik\FilamentStudio\Models\StudioCollection;
 use Flexpik\FilamentStudio\Models\StudioPanel;
 use Flexpik\FilamentStudio\Services\EavQueryBuilder;
+use Illuminate\Support\Str;
 
 class ListWidget extends TableWidget
 {
@@ -48,9 +49,11 @@ class ListWidget extends TableWidget
         preg_match_all('/\{\{(\w+)\}\}/', $template, $matches);
         $fieldNames = $matches[1];
 
+        $labels = $collection->fields()->whereIn('column_name', $fieldNames)->pluck('label', 'column_name');
+
         $columns = [];
-        foreach ($fieldNames as $fieldName) {
-            $columns[] = TextColumn::make($fieldName)->label(ucfirst($fieldName));
+        foreach (array_unique($fieldNames) as $fieldName) {
+            $columns[] = TextColumn::make($fieldName)->label($labels[$fieldName] ?? Str::headline($fieldName));
         }
 
         if (empty($columns)) {

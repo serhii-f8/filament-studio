@@ -408,15 +408,23 @@ class FilamentStudioServiceProvider extends PackageServiceProvider
     protected function loadStubMigrations(): void
     {
         $stubDir = __DIR__.'/../database/migrations';
-        $cacheKey = md5(implode(',', $this->package->migrationFileNames));
+        $names = array_values($this->package->migrationFileNames);
+        $toLoad = static::stubMigrationsToLoad($names, database_path('migrations'));
+
+        $cacheKey = md5(implode(',', $toLoad));
         $tempDir = sys_get_temp_dir().'/filament-studio-migrations-'.$cacheKey;
 
         if (! is_dir($tempDir)) {
             mkdir($tempDir, 0755, true);
 
-            // Use ordered list from hasMigrations() so FK dependencies are respected.
+            // Number by position in the full hasMigrations() list, not in $toLoad, so each stub keeps
+            // the same migration name (and its row in the migrations table) whatever is skipped.
             // Prefix with 2020_ so they sort after Laravel's 0001_ default migrations.
-            foreach (array_values($this->package->migrationFileNames) as $i => $name) {
+            foreach ($names as $i => $name) {
+                if (! in_array($name, $toLoad, true)) {
+                    continue;
+                }
+
                 $seq = str_pad((string) ($i + 1), 6, '0', STR_PAD_LEFT);
                 $stub = "{$stubDir}/{$name}.php.stub";
                 if (file_exists($stub)) {
@@ -426,5 +434,28 @@ class FilamentStudioServiceProvider extends PackageServiceProvider
         }
 
         $this->loadMigrationsFrom($tempDir);
+    }
+
+    /**
+     * Stubs the app has not published itself. Loading a stub that was also published
+     * (`vendor:publish --tag=filament-studio-migrations`) runs the same migration twice under two
+     * names and fails with "table already exists"; skipping it still auto-loads newer stubs.
+     *
+     * @param  array<int, string>  $names
+     * @return array<int, string>
+     */
+    public static function stubMigrationsToLoad(array $names, string $publishedDir): array
+    {
+        $published = array_map('basename', glob(rtrim($publishedDir, '/').'/*.php') ?: []);
+
+        return array_values(array_filter($names, function (string $name) use ($published): bool {
+            foreach ($published as $file) {
+                if (preg_match('/^\d{4}_\d{2}_\d{2}_\d{6}_'.preg_quote($name, '/').'\.php$/', $file)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }));
     }
 }

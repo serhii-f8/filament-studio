@@ -57,7 +57,8 @@ class TextareaFieldType extends AbstractFieldType
     {
         return TextColumn::make($this->field->column_name)
             ->limit(80)
-            ->wrap();
+            ->wrap()
+            ->lineClamp(2);
     }
 
     public function toFilter(): ?BaseFilter

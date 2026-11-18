@@ -388,7 +388,10 @@ class FieldsRelationManager extends RelationManager
                                 ->maxLength(255)
                                 ->placeholder('e.g. Published'),
                         ])
-                        ->columns(2)
+                        ->table([
+                            Forms\Components\Repeater\TableColumn::make('Value')->markAsRequired(),
+                            Forms\Components\Repeater\TableColumn::make('Label')->markAsRequired(),
+                        ])
                         ->mutateRelationshipDataBeforeCreateUsing(function (array $data): array {
                             /** @var StudioCollection $owner */
                             $owner = $this->getOwnerRecord();
@@ -399,6 +402,7 @@ class FieldsRelationManager extends RelationManager
                         ->addActionLabel('Add option')
                         ->defaultItems(0),
                 ])
+                ->columnSpanFull()
                 ->visible(fn (Get $get): bool => in_array($get('field_type'), static::OPTION_FIELD_TYPES, true)
                     && $get('settings.options_source') !== 'collection'),
 

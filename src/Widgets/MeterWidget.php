@@ -2,6 +2,7 @@
 
 namespace Flexpik\FilamentStudio\Widgets;
 
+use Filament\Support\Facades\FilamentColor;
 use Flexpik\FilamentStudio\Enums\AggregateFunction;
 use Flexpik\FilamentStudio\Models\StudioCollection;
 use Flexpik\FilamentStudio\Models\StudioPanel;
@@ -44,6 +45,21 @@ class MeterWidget extends AbstractStudioWidget
     public function getMaximum(): float
     {
         return (float) $this->config('maximum', 100);
+    }
+
+    /**
+     * The colour picker stores hex, but configs written by hand / MCP often use Filament colour
+     * names ("success"), which are not valid SVG paint — map those to the panel's theme variable.
+     */
+    public function getStrokeColor(): string
+    {
+        $color = (string) $this->config('color', '#3b82f6');
+
+        if (array_key_exists($color, FilamentColor::getColors())) {
+            return "var(--{$color}-500)";
+        }
+
+        return $color;
     }
 
     public function getPercentage(): float

@@ -24,7 +24,8 @@ class VariableResolver
             $value === '$CURRENT_TENANT' => Filament::getTenant()?->getKey(),
             $value === '$NOW' => now()->toDateTimeString(),
             str_starts_with($value, '$NOW(') => $this->resolveNowAdjustment($value),
-            str_starts_with($value, '{{') && str_ends_with($value, '}}') => $variables[trim($value, '{} ')] ?? null,
+            // Only a string that is exactly one placeholder is a variable; "{{a}} — {{b}}" is a template.
+            (bool) preg_match('/^\{\{\s*([\w.]+)\s*\}\}$/', $value, $m) => $variables[$m[1]] ?? null,
             default => $value,
         };
     }

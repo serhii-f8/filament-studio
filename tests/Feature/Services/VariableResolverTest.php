@@ -196,3 +196,11 @@ it('resolves tree with nested groups containing $NOW and $CURRENT_RECORD tokens'
 
     Carbon::setTestNow();
 });
+
+it('leaves a template with several placeholders alone instead of treating it as one variable', function () {
+    $resolver = new VariableResolver;
+
+    expect($resolver->resolve('{{full_name}} — {{company}}', ['full_name' => 'x'], null))
+        ->toBe('{{full_name}} — {{company}}')
+        ->and($resolver->resolve('{{ full_name }}', ['full_name' => 'Ada'], null))->toBe('Ada');
+});

@@ -83,3 +83,23 @@ it('shows option labels rather than stored values in the table column', function
     expect($column->formatState('review'))->toBe('In review')
         ->and($column->formatState('retired'))->toBe('retired');
 });
+
+it('colours the table badge with the option colour', function () {
+    $field = StudioField::factory()->create(['column_name' => 'status', 'field_type' => 'select', 'eav_cast' => 'text']);
+    StudioFieldOption::create(['field_id' => $field->id, 'value' => 'churned', 'label' => 'Churned', 'color' => 'danger', 'sort_order' => 0]);
+    StudioFieldOption::create(['field_id' => $field->id, 'value' => 'lead', 'label' => 'Lead', 'sort_order' => 1]);
+
+    $column = (new SelectFieldType($field))->toTableColumn();
+
+    expect($column->getColor('churned'))->toBe('danger')
+        ->and($column->getColor('lead'))->toBe('primary');
+});
+
+it('turns a hex option colour into a Filament palette', function () {
+    $field = StudioField::factory()->create(['column_name' => 'tier', 'field_type' => 'select', 'eav_cast' => 'text']);
+    StudioFieldOption::create(['field_id' => $field->id, 'value' => 'gold', 'label' => 'Gold', 'color' => '#f59e0b', 'sort_order' => 0]);
+
+    $colour = (new SelectFieldType($field))->toTableColumn()->getColor('gold');
+
+    expect($colour)->toBeArray()->toHaveKey(500);
+});

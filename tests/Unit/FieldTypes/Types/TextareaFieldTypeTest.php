@@ -58,3 +58,9 @@ it('returns a settings schema', function () {
 
     expect($schema)->toBeArray();
 });
+
+it('keeps long text to two lines in the table so rows stay compact', function () {
+    $field = StudioField::factory()->make(['column_name' => 'notes', 'field_type' => 'textarea']);
+
+    expect((new TextareaFieldType($field))->toTableColumn()->getLineClamp())->toBe(2);
+});
