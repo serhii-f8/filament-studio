@@ -14,6 +14,8 @@ use Flexpik\FilamentStudio\Enums\EavCast;
 use Flexpik\FilamentStudio\FieldTypes\AbstractFieldType;
 use Flexpik\FilamentStudio\Models\StudioCollection;
 use Flexpik\FilamentStudio\Services\LocaleResolver;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User;
 
 class BelongsToFieldType extends AbstractFieldType
 {
@@ -46,6 +48,12 @@ class BelongsToFieldType extends AbstractFieldType
         $select = Select::make($this->field->column_name);
 
         $relatedSlug = $this->setting('related_collection');
+
+        if (empty($relatedSlug) && $this->referencesUser()) {
+            return $select->options(fn (mixed $state): array => filled($state)
+                ? [$state => static::userLabel($state)]
+                : []);
+        }
 
         if (empty($relatedSlug)) {
             $select->options([])
@@ -99,8 +107,39 @@ class BelongsToFieldType extends AbstractFieldType
 
     public function toTableColumn(): ?Column
     {
-        return TextColumn::make($this->field->column_name)
+        $column = TextColumn::make($this->field->column_name)
             ->label($this->field->label ?? $this->field->column_name);
+
+        if (empty($this->setting('related_collection')) && $this->referencesUser()) {
+            $labels = [];
+
+            $column->formatStateUsing(function (mixed $state) use (&$labels): ?string {
+                if (blank($state)) {
+                    return null;
+                }
+
+                return $labels[$state] ??= static::userLabel($state);
+            });
+        }
+
+        return $column;
+    }
+
+    /**
+     * System "created by" / "updated by" fields store an auth user id rather than a studio record.
+     */
+    protected function referencesUser(): bool
+    {
+        return $this->field->auto_fill_value === '$CURRENT_USER';
+    }
+
+    protected static function userLabel(mixed $id): string
+    {
+        /** @var class-string<Model> $model */
+        $model = config('auth.providers.users.model', User::class);
+        $user = $model::query()->find($id);
+
+        return (string) ($user?->getAttribute('name') ?? $user?->getAttribute('email') ?? $id);
     }
 
     public function toFilter(): ?BaseFilter

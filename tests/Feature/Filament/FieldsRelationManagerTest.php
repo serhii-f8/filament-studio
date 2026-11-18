@@ -216,3 +216,121 @@ it('logs delete_field when deleting a field', function () {
         ->not->toBeNull()
         ->before_state->not->toBeNull();
 });
+
+// --- Type-specific settings & static options (issue #11) ---
+
+function fieldsManager(StudioCollection $collection)
+{
+    return Livewire::test(FieldsRelationManager::class, [
+        'ownerRecord' => $collection,
+        'pageClass' => EditCollection::class,
+    ]);
+}
+
+it('persists type-specific settings when a field is created in the editor', function () {
+    fieldsManager($this->collection)
+        ->mountTableAction('create')
+        ->setTableActionData(['field_type' => 'select'])
+        ->setTableActionData(['column_name' => 'colour', 'label' => 'Colour', 'settings.options_source' => 'static', 'settings.searchable' => true])
+        ->callMountedTableAction()
+        ->assertHasNoTableActionErrors();
+
+    $settings = StudioField::where('column_name', 'colour')->firstOrFail()->settings;
+
+    expect($settings['options_source'])->toBe('static')
+        ->and($settings['searchable'])->toBeTrue();
+});
+
+it('keeps existing type-specific settings when a field is edited', function () {
+    $field = StudioField::factory()->create([
+        'collection_id' => $this->collection->id,
+        'column_name' => 'author',
+        'label' => 'Author',
+        'field_type' => 'belongs_to',
+        'eav_cast' => 'text',
+        'settings' => ['related_collection' => 'authors', 'display_field' => 'full_name'],
+    ]);
+
+    fieldsManager($this->collection)
+        ->mountTableAction('edit', $field)
+        ->assertTableActionDataSet(['settings.related_collection' => 'authors', 'settings.display_field' => 'full_name'])
+        ->setTableActionData(['label' => 'Written by'])
+        ->callMountedTableAction()
+        ->assertHasNoTableActionErrors();
+
+    $field->refresh();
+    expect($field->label)->toBe('Written by')
+        ->and($field->settings['related_collection'])->toBe('authors')
+        ->and($field->settings['display_field'])->toBe('full_name');
+});
+
+it('lets the editor define static options for a select field', function () {
+    fieldsManager($this->collection)
+        ->mountTableAction('create')
+        ->setTableActionData(['field_type' => 'select'])
+        ->setTableActionData([
+            'column_name' => 'priority',
+            'label' => 'Priority',
+            'settings.options_source' => 'static',
+            'options' => [
+                ['value' => 'low', 'label' => 'Low'],
+                ['value' => 'high', 'label' => 'High'],
+            ],
+        ])
+        ->callMountedTableAction()
+        ->assertHasNoTableActionErrors();
+
+    $field = StudioField::where('column_name', 'priority')->firstOrFail();
+
+    expect($field->options()->pluck('label', 'value')->all())->toBe(['low' => 'Low', 'high' => 'High'])
+        ->and($field->options()->pluck('tenant_id')->unique()->all())->toBe([$this->collection->tenant_id]);
+});
+
+it('shows and updates existing options when editing a select field', function () {
+    $field = StudioField::factory()->create([
+        'collection_id' => $this->collection->id,
+        'column_name' => 'status',
+        'label' => 'Status',
+        'field_type' => 'select',
+        'eav_cast' => 'text',
+        'settings' => ['options_source' => 'static'],
+    ]);
+    foreach (['draft' => 'Draft', 'published' => 'Published', 'archived' => 'Archived'] as $i => $label) {
+        $field->options()->create(['value' => $i, 'label' => $label, 'sort_order' => count($field->options()->get())]);
+    }
+
+    $component = fieldsManager($this->collection)->mountTableAction('edit', $field);
+
+    $options = collect($component->get('mountedActions.0.data.options'))->values();
+    expect($options->pluck('label', 'value')->all())->toBe(['draft' => 'Draft', 'published' => 'Published', 'archived' => 'Archived']);
+
+    $component
+        ->setTableActionData(['options' => [
+            ['value' => 'draft', 'label' => 'Draft'],
+            ['value' => 'live', 'label' => 'Live'],
+        ]])
+        ->callMountedTableAction()
+        ->assertHasNoTableActionErrors();
+
+    expect($field->options()->pluck('label', 'value')->all())->toBe(['draft' => 'Draft', 'live' => 'Live']);
+});
+
+it('fills settings a field never stored with the type defaults instead of switching them off', function () {
+    $field = StudioField::factory()->create([
+        'collection_id' => $this->collection->id,
+        'column_name' => 'author',
+        'label' => 'Author',
+        'field_type' => 'belongs_to',
+        'eav_cast' => 'text',
+        'settings' => ['related_collection' => 'authors'],
+    ]);
+
+    fieldsManager($this->collection)
+        ->mountTableAction('edit', $field)
+        ->assertTableActionDataSet(['settings.searchable' => true, 'settings.preload' => true])
+        ->callMountedTableAction()
+        ->assertHasNoTableActionErrors();
+
+    expect($field->refresh()->settings)
+        ->toMatchArray(['related_collection' => 'authors', 'searchable' => true, 'preload' => true]);
+});

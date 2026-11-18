@@ -32,6 +32,9 @@ class FieldsRelationManager extends RelationManager
 
     protected ?array $beforeFieldState = null;
 
+    /** Field types whose static choices are stored as studio_field_options rows. */
+    protected const OPTION_FIELD_TYPES = ['select', 'multi_select', 'radio', 'checkbox_list'];
+
     public function table(Table $table): Table
     {
         $registry = app(FieldTypeRegistry::class);
@@ -102,6 +105,7 @@ class FieldsRelationManager extends RelationManager
             ->defaultSort('sort_order')
             ->actions([
                 EditAction::make()
+                    ->mutateRecordDataUsing(fn (array $data): array => static::withTypeSettingDefaults($data))
                     ->before(function (Model $record) {
                         $this->beforeFieldState = $record->toArray();
                     })
@@ -187,6 +191,48 @@ class FieldsRelationManager extends RelationManager
                         }
                     }),
             ]);
+    }
+
+    /**
+     * A toggle's default() only applies to new records, so a setting the field never stored
+     * (older fields, fields created via MCP/API) would load as "off" and be saved that way.
+     * Pre-fill missing type settings with the type's declared defaults instead.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected static function withTypeSettingDefaults(array $data): array
+    {
+        $types = app(FieldTypeRegistry::class)->all();
+        $type = $types[$data['field_type'] ?? ''] ?? null;
+
+        if ($type === null) {
+            return $data;
+        }
+
+        $settings = is_array($data['settings'] ?? null) ? $data['settings'] : [];
+
+        foreach ($type::settingsSchema() as $component) {
+            if (! $component instanceof Forms\Components\Field) {
+                continue;
+            }
+
+            $name = $component->getName();
+
+            if (array_key_exists($name, $settings)) {
+                continue;
+            }
+
+            $default = $component->getDefaultState();
+
+            if ($default !== null) {
+                $settings[$name] = $default;
+            }
+        }
+
+        $data['settings'] = $settings;
+
+        return $data;
     }
 
     public function form(Schema $schema): Schema
@@ -317,9 +363,44 @@ class FieldsRelationManager extends RelationManager
 
                     return $allTypes[$fieldType]::settingsSchema();
                 })
+                // Type settings live in the `settings` JSON column, alongside settings.conditions.
+                ->statePath('settings')
                 ->collapsible()
                 ->collapsed()
                 ->visible(fn (Get $get) => filled($get('field_type'))),
+
+            Section::make('Options')
+                ->icon('heroicon-o-list-bullet')
+                ->description('The choices users can pick from. The value is stored; the label is what users see.')
+                ->schema([
+                    Forms\Components\Repeater::make('options')
+                        ->hiddenLabel()
+                        ->relationship('options')
+                        ->orderColumn('sort_order')
+                        ->schema([
+                            Forms\Components\TextInput::make('value')
+                                ->required()
+                                ->maxLength(255)
+                                ->distinct()
+                                ->placeholder('e.g. published'),
+                            Forms\Components\TextInput::make('label')
+                                ->required()
+                                ->maxLength(255)
+                                ->placeholder('e.g. Published'),
+                        ])
+                        ->columns(2)
+                        ->mutateRelationshipDataBeforeCreateUsing(function (array $data): array {
+                            /** @var StudioCollection $owner */
+                            $owner = $this->getOwnerRecord();
+                            $data['tenant_id'] = $owner->tenant_id;
+
+                            return $data;
+                        })
+                        ->addActionLabel('Add option')
+                        ->defaultItems(0),
+                ])
+                ->visible(fn (Get $get): bool => in_array($get('field_type'), static::OPTION_FIELD_TYPES, true)
+                    && $get('settings.options_source') !== 'collection'),
 
             Section::make('Conditions')
                 ->icon('heroicon-o-adjustments-horizontal')

@@ -1,9 +1,11 @@
 <?php
 
 use Filament\Facades\Filament;
+use Flexpik\FilamentStudio\FieldTypes\Types\SelectFieldType;
 use Flexpik\FilamentStudio\FilamentStudioPlugin;
 use Flexpik\FilamentStudio\Models\StudioCollection;
 use Flexpik\FilamentStudio\Models\StudioField;
+use Flexpik\FilamentStudio\Models\StudioFieldOption;
 use Flexpik\FilamentStudio\Models\StudioMigrationLog;
 use Flexpik\FilamentStudio\Resources\CollectionManagerResource;
 use Flexpik\FilamentStudio\Resources\CollectionManagerResource\Pages\CreateCollection;
@@ -161,6 +163,41 @@ it('creates system fields when selected in wizard', function () {
         ->toContain('sort_order')
         ->toContain('created_at')
         ->toContain('updated_at');
+});
+
+it('creates draft, published and archived options for the status system field', function () {
+    Livewire::test(CreateCollection::class)
+        ->fillForm([
+            'name' => 'posts',
+            'label' => 'Post',
+            'label_plural' => 'Posts',
+            'system_fields' => ['status'],
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $collection = StudioCollection::where('name', 'posts')->first();
+    $status = StudioField::where('collection_id', $collection->id)
+        ->where('column_name', 'status')
+        ->first();
+
+    $options = StudioFieldOption::where('field_id', $status->id)->orderBy('sort_order')->get();
+
+    expect($options->pluck('label', 'value')->all())->toBe([
+        'draft' => 'Draft',
+        'published' => 'Published',
+        'archived' => 'Archived',
+    ])
+        ->and($options->pluck('sort_order')->all())->toBe([0, 1, 2])
+        ->and($options->pluck('tenant_id')->unique()->all())->toBe([$collection->tenant_id]);
+
+    $select = (new SelectFieldType($status))->toFilamentComponent();
+
+    expect($select->getOptions())->toBe([
+        'draft' => 'Draft',
+        'published' => 'Published',
+        'archived' => 'Archived',
+    ]);
 });
 
 it('logs create_collection to migration logs', function () {

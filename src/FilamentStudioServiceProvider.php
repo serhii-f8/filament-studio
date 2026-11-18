@@ -8,6 +8,7 @@ use Flexpik\FilamentStudio\Api\Flows\StudioFlowsApiRouteRegistrar;
 use Flexpik\FilamentStudio\Api\OpenApi\StudioDocumentTransformer;
 use Flexpik\FilamentStudio\Api\OpenApi\StudioOperationTransformer;
 use Flexpik\FilamentStudio\Api\StudioApiRouteRegistrar;
+use Flexpik\FilamentStudio\Commands\RepairSystemFieldsCommand;
 use Flexpik\FilamentStudio\FieldTypes\FieldTypeRegistry;
 use Flexpik\FilamentStudio\FieldTypes\Types;
 use Flexpik\FilamentStudio\Flows\Commands\BackfillFlowVersioningCommand;
@@ -119,6 +120,7 @@ class FilamentStudioServiceProvider extends PackageServiceProvider
                 'create_studio_flow_audit_log_table',
                 'z_add_observability_columns_to_flow_runs_and_steps',
                 'z_add_duration_ms_to_flow_run_steps',
+                'z_repair_system_fields',
             ])
             ->hasViews();
     }
@@ -242,6 +244,7 @@ class FilamentStudioServiceProvider extends PackageServiceProvider
         $this->bootDefaultFlowTriggers();
         $this->bootFlowScheduler();
         $this->commands([
+            RepairSystemFieldsCommand::class,
             BackfillFlowVersioningCommand::class,
             DispatchScheduledFlowsCommand::class,
         ]);

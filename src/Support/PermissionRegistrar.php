@@ -143,6 +143,30 @@ class PermissionRegistrar
     }
 
     /**
+     * Give a user every record permission for a collection — used so whoever creates a
+     * data model can immediately work with its records.
+     * No-op if spatie/laravel-permission is not installed or the user model lacks HasPermissions.
+     */
+    public static function grantCollectionTo(mixed $user, StudioCollection $collection, ?string $guardName = null): void
+    {
+        if (! static::spatieIsInstalled() || ! is_object($user) || ! method_exists($user, 'givePermissionTo')) {
+            return;
+        }
+
+        static::syncForCollection($collection, $guardName);
+
+        try {
+            $user->givePermissionTo(StudioPermission::forCollection($collection->slug));
+
+            app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+        } catch (\Throwable $e) {
+            // e.g. the configured permission guard differs from the user's guard. The collection
+            // already exists at this point, so never fail its creation over the convenience grant.
+            report($e);
+        }
+    }
+
+    /**
      * Remove all permissions for a single collection.
      * No-op if spatie/laravel-permission is not installed.
      */

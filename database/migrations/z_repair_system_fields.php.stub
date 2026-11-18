@@ -1,0 +1,18 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\Artisan;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        // Repairs Status options and created/updated system fields left empty by releases <= v1.8.1.
+        Artisan::call('studio:repair-system-fields');
+    }
+
+    public function down(): void
+    {
+        // Irreversible data repair — no rollback.
+    }
+};

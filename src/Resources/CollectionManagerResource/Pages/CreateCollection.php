@@ -11,8 +11,10 @@ use Filament\Schemas\Components\Wizard;
 use Flexpik\FilamentStudio\FilamentStudioPlugin;
 use Flexpik\FilamentStudio\Models\StudioCollection;
 use Flexpik\FilamentStudio\Models\StudioField;
+use Flexpik\FilamentStudio\Models\StudioFieldOption;
 use Flexpik\FilamentStudio\Models\StudioMigrationLog;
 use Flexpik\FilamentStudio\Resources\CollectionManagerResource;
+use Flexpik\FilamentStudio\Support\PermissionRegistrar;
 use Illuminate\Support\Str;
 
 class CreateCollection extends CreateRecord
@@ -179,12 +181,14 @@ class CreateCollection extends CreateRecord
             'performed_by' => auth()->id(),
         ]);
 
+        PermissionRegistrar::grantCollectionTo(auth()->user(), $collection);
+
         FilamentStudioPlugin::fireAfterCollectionCreated($collection);
     }
 
     private function createSystemField(StudioCollection $collection, array $definition, int $sortOrder): void
     {
-        StudioField::create([
+        $field = StudioField::create([
             'collection_id' => $collection->id,
             'tenant_id' => $collection->tenant_id,
             'column_name' => $definition['column_name'],
@@ -198,6 +202,17 @@ class CreateCollection extends CreateRecord
             'auto_fill_value' => $definition['auto_fill_value'] ?? null,
             'settings' => $definition['settings'] ?? null,
         ]);
+
+        // Select fields read their static choices from studio_field_options, not from settings.
+        foreach ($definition['options'] ?? [] as $index => $option) {
+            StudioFieldOption::create([
+                'field_id' => $field->id,
+                'tenant_id' => $collection->tenant_id,
+                'value' => $option['value'],
+                'label' => $option['label'],
+                'sort_order' => $index,
+            ]);
+        }
     }
 
     /** @return array<string, array<string, mixed>> */
@@ -212,11 +227,11 @@ class CreateCollection extends CreateRecord
                 'is_required' => true,
                 'settings' => [
                     'options_source' => 'static',
-                    'default_options' => [
-                        ['value' => 'draft', 'label' => 'Draft'],
-                        ['value' => 'published', 'label' => 'Published'],
-                        ['value' => 'archived', 'label' => 'Archived'],
-                    ],
+                ],
+                'options' => [
+                    ['value' => 'draft', 'label' => 'Draft'],
+                    ['value' => 'published', 'label' => 'Published'],
+                    ['value' => 'archived', 'label' => 'Archived'],
                 ],
             ],
             'sort_order' => [

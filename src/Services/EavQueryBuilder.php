@@ -1009,7 +1009,7 @@ class EavQueryBuilder
                 'updated_by' => $userId,
             ]);
 
-            $this->bulkInsertValues($record->id, $data);
+            $this->bulkInsertValues($record->id, $this->applyAutoFill($data, 'create', $userId));
 
             return $record;
         });
@@ -1034,7 +1034,7 @@ class EavQueryBuilder
                 $record->touchQuietly();
             }
 
-            foreach ($data as $columnName => $value) {
+            foreach ($this->applyAutoFill($data, 'update', $userId) as $columnName => $value) {
                 $field = $this->resolveField($columnName);
                 if (! $field) {
                     continue;
@@ -1139,6 +1139,36 @@ class EavQueryBuilder
         }
 
         $record->touch();
+    }
+
+    /**
+     * Overwrite system-managed fields (auto_fill_on / auto_fill_value) for the given write event.
+     *
+     * A token that resolves to null (e.g. $CURRENT_USER with no user to attribute) leaves the
+     * field untouched, so an unattributed update never wipes the previous value.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function applyAutoFill(array $data, string $event, ?int $userId): array
+    {
+        foreach ($this->getFields() as $field) {
+            if (! in_array($event, $field->auto_fill_on ?? [], true) || $field->auto_fill_value === null) {
+                continue;
+            }
+
+            $value = match ($field->auto_fill_value) {
+                '$CURRENT_USER' => $userId ?? auth()->id(),
+                '$CURRENT_TENANT' => $this->tenantId,
+                default => app(VariableResolver::class)->resolve($field->auto_fill_value, [], null),
+            };
+
+            if ($value !== null) {
+                $data[$field->column_name] = $value;
+            }
+        }
+
+        return $data;
     }
 
     /**

@@ -93,8 +93,18 @@ class SelectFieldType extends AbstractFieldType
 
     public function toTableColumn(): ?Column
     {
+        $labels = null;
+
         return TextColumn::make($this->field->column_name)
-            ->badge();
+            ->badge()
+            ->formatStateUsing(function (mixed $state) use (&$labels): string {
+                // Loaded once per column, on first render, not when the table is built.
+                $labels ??= StudioFieldOption::where('field_id', $this->field->id)
+                    ->pluck('label', 'value')
+                    ->all();
+
+                return (string) ($labels[$state] ?? $state);
+            });
     }
 
     public function toFilter(): ?BaseFilter

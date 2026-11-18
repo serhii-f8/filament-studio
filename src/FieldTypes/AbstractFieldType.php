@@ -115,6 +115,15 @@ abstract class AbstractFieldType
             $component->disabled();
         }
 
+        // System-managed values are written by EavQueryBuilder on save: show them, never submit them.
+        if (! empty($this->field->auto_fill_on)) {
+            $component->disabled();
+
+            if (method_exists($component, 'dehydrated')) {
+                $component->dehydrated(false);
+            }
+        }
+
         if (method_exists($component, 'label') && $this->field->label) {
             $component->label($this->field->getTranslatedAttribute('label'));
         }

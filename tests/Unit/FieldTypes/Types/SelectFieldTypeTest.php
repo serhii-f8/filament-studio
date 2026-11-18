@@ -5,6 +5,7 @@ use Filament\Tables\Columns\TextColumn;
 use Flexpik\FilamentStudio\Enums\EavCast;
 use Flexpik\FilamentStudio\FieldTypes\Types\SelectFieldType;
 use Flexpik\FilamentStudio\Models\StudioField;
+use Flexpik\FilamentStudio\Models\StudioFieldOption;
 
 it('has correct static properties', function () {
     expect(SelectFieldType::$key)->toBe('select');
@@ -71,4 +72,14 @@ it('returns a settings schema', function () {
 
     expect($schema)->toBeArray();
     expect($schema)->not->toBeEmpty();
+});
+
+it('shows option labels rather than stored values in the table column', function () {
+    $field = StudioField::factory()->create(['column_name' => 'status', 'field_type' => 'select', 'eav_cast' => 'text']);
+    StudioFieldOption::create(['field_id' => $field->id, 'value' => 'review', 'label' => 'In review', 'sort_order' => 0]);
+
+    $column = (new SelectFieldType($field))->toTableColumn();
+
+    expect($column->formatState('review'))->toBe('In review')
+        ->and($column->formatState('retired'))->toBe('retired');
 });

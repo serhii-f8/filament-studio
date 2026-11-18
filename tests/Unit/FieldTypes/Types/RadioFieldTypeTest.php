@@ -5,6 +5,7 @@ use Filament\Tables\Columns\TextColumn;
 use Flexpik\FilamentStudio\Enums\EavCast;
 use Flexpik\FilamentStudio\FieldTypes\Types\RadioFieldType;
 use Flexpik\FilamentStudio\Models\StudioField;
+use Flexpik\FilamentStudio\Models\StudioFieldOption;
 
 it('has correct static properties', function () {
     expect(RadioFieldType::$key)->toBe('radio');
@@ -44,4 +45,14 @@ it('returns a settings schema', function () {
     $schema = RadioFieldType::settingsSchema();
 
     expect($schema)->toBeArray();
+});
+
+it('shows option labels rather than stored values in the table column', function () {
+    $field = StudioField::factory()->create(['column_name' => 'status', 'field_type' => 'radio', 'eav_cast' => 'text']);
+    StudioFieldOption::create(['field_id' => $field->id, 'value' => 'review', 'label' => 'In review', 'sort_order' => 0]);
+
+    $column = (new RadioFieldType($field))->toTableColumn();
+
+    expect($column->formatState('review'))->toBe('In review')
+        ->and($column->formatState('retired'))->toBe('retired');
 });

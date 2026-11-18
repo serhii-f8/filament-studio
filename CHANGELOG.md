@@ -5,6 +5,41 @@ All notable changes to Filament Studio will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **The Status system field had no options** ([#11](https://github.com/serhii-f8/filament-studio/issues/11)).
+  The create-collection wizard parked Draft / Published / Archived in `settings.default_options`,
+  which nothing reads; select fields load their choices from `studio_field_options`. The wizard now
+  writes the option rows.
+- **Created At / Updated At / Created By / Updated By were never filled.** Their `auto_fill_on` /
+  `auto_fill_value` settings were stored but nothing applied them. `EavQueryBuilder::create()` and
+  `update()` now fill them, so every write path (panel, REST API, MCP, Flows) is covered. They
+  render read-only and are not submitted with the form, client-supplied values for them are
+  overwritten, and an update with no user to credit keeps the previous Updated By. Created By /
+  Updated By show the user's name in forms and tables.
+- **Editing a record whose Created By was set failed with "The selected created by is invalid".**
+  Fixed by the change above.
+- **Saving a field in the field editor wiped its type-specific settings** (options source, a
+  Belongs To field's related collection, toggles and so on). The Type-Specific Settings section now
+  saves into `settings`. When a field is edited, any type setting it never stored is filled with
+  the type's default instead of loading as "off".
+- **No way to define static options in the panel.** The field editor now has an Options list for
+  select, multi-select, radio and checkbox-list fields.
+- **A new data model returned 403 to the user who created it.** Its four
+  `studio.collection.{slug}.*` permissions were created but granted to nobody. The creator now gets
+  them (only when spatie/laravel-permission is installed; a guard mismatch is logged, never fatal).
+- **Select and Radio table columns showed the stored value instead of the option label.**
+
+### Upgrading
+
+- Run `php artisan migrate`. The new `z_repair_system_fields` migration runs
+  `studio:repair-system-fields`, which turns legacy `default_options` into option rows and
+  back-fills empty Created/Updated At/By values from each record's own `created_at`, `updated_at`,
+  `created_by` and `updated_by` columns. It only fills what is missing, never overwrites, and is
+  safe to run again by hand.
+
 ## [1.8.1] - 2026-09-22
 
 ### Fixed
