@@ -57,6 +57,16 @@ class StudioField extends Model
 
     protected $guarded = ['id'];
 
+    /**
+     * Fields are offered in the table filters and the Advanced Filter unless switched off, the same
+     * default the field editor uses, so fields created through MCP or code are filterable too.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'is_filterable' => true,
+    ];
+
     public function getTable(): string
     {
         return config('filament-studio.table_prefix', 'studio_').'fields';

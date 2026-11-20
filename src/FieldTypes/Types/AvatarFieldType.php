@@ -4,6 +4,8 @@ namespace Flexpik\FilamentStudio\FieldTypes\Types;
 
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\Entry;
+use Filament\Infolists\Components\ImageEntry;
 use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\ImageColumn;
@@ -57,6 +59,14 @@ class AvatarFieldType extends AbstractFieldType
         $column->disk($this->setting('disk', 'public'));
 
         return $column;
+    }
+
+    public function toInfolistEntry(): ?Entry
+    {
+        return ImageEntry::make($this->field->column_name)
+            ->disk($this->setting('disk', 'public'))
+            ->circular()
+            ->imageHeight(64);
     }
 
     public function toFilter(): ?BaseFilter

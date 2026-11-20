@@ -4,6 +4,8 @@ namespace Flexpik\FilamentStudio\FieldTypes\Types;
 
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\Entry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\TextColumn;
@@ -52,6 +54,11 @@ class MarkdownFieldType extends AbstractFieldType
             ->markdown()
             ->limit(100)
             ->wrap();
+    }
+
+    public function toInfolistEntry(): ?Entry
+    {
+        return TextEntry::make($this->field->column_name)->markdown()->prose();
     }
 
     public function toFilter(): ?BaseFilter

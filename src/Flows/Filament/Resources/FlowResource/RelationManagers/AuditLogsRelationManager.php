@@ -12,6 +12,8 @@ class AuditLogsRelationManager extends RelationManager
 {
     protected static string $relationship = 'auditLogs';
 
+    protected static ?string $modelLabel = 'audit entry';
+
     protected static ?string $title = 'Audit log';
 
     public function table(Table $table): Table

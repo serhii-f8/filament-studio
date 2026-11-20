@@ -37,3 +37,28 @@ it('returns STUDIO_VALIDATION_FAILED for missing name', function () {
     mcpCallTool($key, CreateCollectionTool::class, [])
         ->assertSee('STUDIO_VALIDATION_FAILED');
 });
+
+it('derives singular and plural labels from a plural name', function () {
+    $key = StudioApiKey::factory()
+        ->withPermissions(['_studio' => ['manage_collections']])
+        ->forTenant(1)
+        ->create();
+
+    mcpCallTool($key, CreateCollectionTool::class, ['name' => 'qa_tasks']);
+
+    $collection = StudioCollection::sole();
+
+    expect($collection->label)->toBe('Qa Task')
+        ->and($collection->label_plural)->toBe('Qa Tasks');
+});
+
+it('accepts an explicit plural label', function () {
+    $key = StudioApiKey::factory()
+        ->withPermissions(['_studio' => ['manage_collections']])
+        ->forTenant(1)
+        ->create();
+
+    mcpCallTool($key, CreateCollectionTool::class, ['name' => 'people', 'label' => 'Person', 'label_plural' => 'Folks']);
+
+    expect(StudioCollection::sole()->label_plural)->toBe('Folks');
+});

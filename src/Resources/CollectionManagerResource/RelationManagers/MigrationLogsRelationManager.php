@@ -13,6 +13,8 @@ class MigrationLogsRelationManager extends RelationManager
 
     protected static ?string $title = 'Audit Log';
 
+    protected static ?string $modelLabel = 'log entry';
+
     protected static string|\BackedEnum|null $icon = 'heroicon-o-clipboard-document-list';
 
     public function table(Table $table): Table

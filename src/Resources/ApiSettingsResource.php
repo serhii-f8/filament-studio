@@ -71,6 +71,8 @@ class ApiSettingsResource extends Resource
 
                         Forms\Components\Repeater::make('permission_entries')
                             ->label('Collection Permissions')
+                            ->helperText('Optional. Without any rows the key has no REST API access, e.g. for an MCP-only key.')
+                            ->defaultItems(0)
                             ->hidden(fn (Get $get) => (bool) $get('wildcard_access'))
                             ->schema([
                                 Forms\Components\Select::make('collection_slug')

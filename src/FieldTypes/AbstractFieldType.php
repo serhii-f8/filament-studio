@@ -3,6 +3,9 @@
 namespace Flexpik\FilamentStudio\FieldTypes;
 
 use Filament\Facades\Filament;
+use Filament\Infolists\Components\Entry;
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Filters\BaseFilter;
@@ -79,6 +82,67 @@ abstract class AbstractFieldType
         }
 
         return $this->applyCommonColumnProperties($column);
+    }
+
+    /**
+     * The read-only entry shown for this field on the record view page, or null to leave it out.
+     * The default renders by storage type; types override it where they need richer display.
+     */
+    public function toInfolistEntry(): ?Entry
+    {
+        $name = $this->field->column_name;
+
+        return match (static::$eavCast) {
+            EavCast::Boolean => IconEntry::make($name)->boolean(),
+            EavCast::Datetime => TextEntry::make($name)->dateTime(),
+            EavCast::Integer, EavCast::Decimal => TextEntry::make($name)->numeric(),
+            EavCast::Json => TextEntry::make($name)
+                ->badge()
+                ->formatStateUsing(fn (mixed $state): string => static::describeValue($state)),
+            default => TextEntry::make($name),
+        };
+    }
+
+    /**
+     * Build the view-page entry with the field's label and an empty-state placeholder applied.
+     */
+    public function buildInfolistEntry(): ?Entry
+    {
+        $entry = $this->toInfolistEntry();
+
+        if ($entry === null) {
+            return null;
+        }
+
+        $entry->label($this->field->label ? $this->field->getTranslatedAttribute('label') : $this->field->column_name);
+
+        if (method_exists($entry, 'placeholder')) {
+            $entry->placeholder('—');
+        }
+
+        if (method_exists($entry, 'hint') && $this->field->hint) {
+            $entry->hint($this->field->getTranslatedAttribute('hint'));
+        }
+
+        return $entry;
+    }
+
+    /**
+     * A short plain-text rendering of a stored value: lists are joined, rows read "key: value".
+     */
+    public static function describeValue(mixed $value): string
+    {
+        if (! is_array($value)) {
+            return is_bool($value) ? ($value ? 'Yes' : 'No') : (string) $value;
+        }
+
+        if (array_is_list($value)) {
+            return implode(', ', array_map(fn (mixed $item): string => static::describeValue($item), $value));
+        }
+
+        return collect($value)
+            ->map(fn (mixed $item, string|int $key): string => "{$key}: ".static::describeValue($item))
+            ->implode(' · ');
     }
 
     /**

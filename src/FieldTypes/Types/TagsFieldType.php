@@ -4,6 +4,8 @@ namespace Flexpik\FilamentStudio\FieldTypes\Types;
 
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\Entry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\TextColumn;
@@ -53,6 +55,11 @@ class TagsFieldType extends AbstractFieldType
                 return collect($values)->implode(', ');
             })
             ->separator(', ');
+    }
+
+    public function toInfolistEntry(): ?Entry
+    {
+        return TextEntry::make($this->field->column_name)->badge();
     }
 
     public function toFilter(): ?BaseFilter

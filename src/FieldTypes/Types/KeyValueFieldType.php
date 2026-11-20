@@ -5,6 +5,8 @@ namespace Flexpik\FilamentStudio\FieldTypes\Types;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\Entry;
+use Filament\Infolists\Components\KeyValueEntry;
 use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\TextColumn;
@@ -57,6 +59,11 @@ class KeyValueFieldType extends AbstractFieldType
         return TextColumn::make($this->field->column_name)
             ->formatStateUsing(fn ($state) => is_array($state) ? count($state).' entries' : '0 entries')
             ->badge();
+    }
+
+    public function toInfolistEntry(): ?Entry
+    {
+        return KeyValueEntry::make($this->field->column_name);
     }
 
     public function toFilter(): ?BaseFilter

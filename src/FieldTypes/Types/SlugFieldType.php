@@ -3,6 +3,8 @@
 namespace Flexpik\FilamentStudio\FieldTypes\Types;
 
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\Entry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\TextColumn;
@@ -58,6 +60,11 @@ class SlugFieldType extends AbstractFieldType
         return TextColumn::make($this->field->column_name)
             ->badge()
             ->color('gray');
+    }
+
+    public function toInfolistEntry(): ?Entry
+    {
+        return TextEntry::make($this->field->column_name)->badge()->color('gray')->copyable();
     }
 
     public function toFilter(): ?BaseFilter

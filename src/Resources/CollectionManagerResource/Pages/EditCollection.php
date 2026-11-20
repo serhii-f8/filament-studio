@@ -38,21 +38,6 @@ class EditCollection extends EditRecord
     {
         return [
             Actions\DeleteAction::make(),
-            Actions\Action::make('auditLog')
-                ->label('Audit Log')
-                ->icon('heroicon-o-document-magnifying-glass')
-                ->slideOver()
-                ->modalContent(function () {
-                    /** @var StudioCollection $record */
-                    $record = $this->record;
-
-                    $logs = StudioMigrationLog::where('collection_id', $record->id)
-                        ->orderByDesc('created_at')
-                        ->limit(50)
-                        ->get();
-
-                    return view('studio.audit-log', ['logs' => $logs]);
-                }),
         ];
     }
 }

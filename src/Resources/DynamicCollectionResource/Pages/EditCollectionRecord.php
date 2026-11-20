@@ -38,7 +38,7 @@ class EditCollectionRecord extends EditRecord
 
     public function getTitle(): string
     {
-        return 'Edit '.$this->getResolvedCollection()->label;
+        return 'Edit '.DynamicCollectionResource::getRecordTitle($this->getRecord());
     }
 
     /**
@@ -138,6 +138,9 @@ class EditCollectionRecord extends EditRecord
                 ->label('Version History')
                 ->icon('heroicon-o-clock')
                 ->slideOver()
+                // Read-only history: no Submit button, only Close.
+                ->modalSubmitAction(false)
+                ->modalCancelActionLabel('Close')
                 // The Restore buttons inside the slide-over mount this as a child action.
                 ->registerModalActions([$this->restoreVersionAction()])
                 ->modalContent(function () {

@@ -4,6 +4,8 @@ namespace Flexpik\FilamentStudio\FieldTypes\Types;
 
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\Entry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\TextColumn;
@@ -11,10 +13,13 @@ use Filament\Tables\Filters\BaseFilter;
 use Filament\Tables\Filters\SelectFilter;
 use Flexpik\FilamentStudio\Enums\EavCast;
 use Flexpik\FilamentStudio\FieldTypes\AbstractFieldType;
+use Flexpik\FilamentStudio\FieldTypes\Concerns\DisplaysOptions;
 use Flexpik\FilamentStudio\Models\StudioFieldOption;
 
 class MultiSelectFieldType extends AbstractFieldType
 {
+    use DisplaysOptions;
+
     public static string $key = 'multi_select';
 
     public static string $label = 'Multi Select';
@@ -72,6 +77,14 @@ class MultiSelectFieldType extends AbstractFieldType
                 return collect($values)->map(fn ($v) => $options[$v] ?? $v)->implode(', ');
             })
             ->separator(', ');
+    }
+
+    public function toInfolistEntry(): ?Entry
+    {
+        return TextEntry::make($this->field->column_name)
+            ->badge()
+            ->formatStateUsing(fn (mixed $state): string => $this->optionLabel($state))
+            ->color(fn (mixed $state): string|array => $this->optionColor($state));
     }
 
     public function toFilter(): ?BaseFilter

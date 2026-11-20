@@ -1,10 +1,32 @@
 import React from 'react';
-import { BaseEdge, EdgeLabelRenderer, getStraightPath, type EdgeProps } from '@xyflow/react';
+import { BaseEdge, EdgeLabelRenderer, getBezierPath, useStore, type EdgeProps, type ReactFlowState } from '@xyflow/react';
 import { useFlowStore } from '../state/useFlowStore';
+import { routeEdge, type NodeRect } from './routeEdge';
+
+function rectOf(state: ReactFlowState, id: string): NodeRect | null {
+    const node = state.nodeLookup.get(id);
+    if (!node) return null;
+    const { x, y } = node.internals.positionAbsolute;
+    return { x, y, width: node.measured?.width ?? 0, height: node.measured?.height ?? 0 };
+}
+
+const sameRect = (a: NodeRect | null, b: NodeRect | null) =>
+    a === b || (!!a && !!b && a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height);
 
 export function BranchEdge(props: EdgeProps) {
-    const { id, sourceX, sourceY, targetX, targetY } = props;
-    const [path, labelX, labelY] = getStraightPath({ sourceX, sourceY, targetX, targetY });
+    const { id, source, target, sourceX, sourceY, targetX, targetY } = props;
+    const sourceRect = useStore((s) => rectOf(s, source), sameRect);
+    const targetRect = useStore((s) => rectOf(s, target), sameRect);
+    const sourceType = useStore((s) => s.nodeLookup.get(source)?.type);
+
+    const route = routeEdge({
+        source: sourceRect,
+        target: targetRect,
+        sourceHandleId: props.sourceHandleId,
+        sourceHasFailureHandle: sourceType === 'operation',
+        sourceX, sourceY, targetX, targetY,
+    });
+    const [path, labelX, labelY] = getBezierPath(route);
     const color = props.sourceHandleId === 'failure' ? '#ef4444' : '#0ea5e9';
     return (
         <>

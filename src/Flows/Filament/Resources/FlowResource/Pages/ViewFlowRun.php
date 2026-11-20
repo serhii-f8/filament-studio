@@ -91,10 +91,21 @@ class ViewFlowRun extends Page
     protected function getHeaderActions(): array
     {
         return [
+            // Runs the same trigger payload again against the currently published version.
             Action::make('rerun')
-                ->label('Re-run with same payload')
+                ->label('Re-run')
                 ->icon('heroicon-o-arrow-path')
                 ->visible(fn () => auth()->user()?->can('run_flows'))
+                ->disabled(fn () => $this->record instanceof StudioFlow && $this->record->published_version_id === null)
+                ->tooltip(fn () => $this->record instanceof StudioFlow && $this->record->published_version_id === null
+                    ? 'Publish the flow to re-run it.'
+                    : 'Run again with the same payload on the published version.')
+                ->requiresConfirmation(fn () => $this->run instanceof StudioFlowRun
+                    && $this->record instanceof StudioFlow
+                    && $this->run->flow_version_id !== null
+                    && $this->run->flow_version_id !== $this->record->published_version_id)
+                ->modalHeading('Re-run against the current version?')
+                ->modalDescription('This run used a different version than the one now published. Re-running uses the current published version.')
                 ->action(function (FlowDispatcher $dispatcher) {
                     $dispatcher->dispatchAsync(
                         flow: $this->record,
@@ -103,26 +114,6 @@ class ViewFlowRun extends Page
                         accountability: ['user_id' => auth()->id(), 'tenant_id' => $this->record->tenant_id, 'role' => null, 'source' => 'manual'],
                     );
                     Notification::make()->success()->title('Re-run dispatched')->send();
-                }),
-            Action::make('replay')
-                ->label('Replay')
-                ->icon('heroicon-o-play-circle')
-                ->visible(fn () => auth()->user()?->can('run_flows'))
-                ->disabled(fn () => $this->record instanceof StudioFlow && $this->record->published_version_id === null)
-                ->requiresConfirmation(fn () => $this->run instanceof StudioFlowRun
-                    && $this->record instanceof StudioFlow
-                    && $this->run->flow_version_id !== null
-                    && $this->run->flow_version_id !== $this->record->published_version_id)
-                ->modalHeading('Replay against current version?')
-                ->modalDescription('This run used a different version than the currently published version. Replaying will use the current published version.')
-                ->action(function (FlowDispatcher $dispatcher) {
-                    $dispatcher->dispatchAsync(
-                        flow: $this->record,
-                        triggerType: $this->run->trigger_type,
-                        payload: $this->run->trigger_payload ?? [],
-                        accountability: ['user_id' => auth()->id(), 'tenant_id' => $this->record->tenant_id, 'role' => null, 'source' => 'manual'],
-                    );
-                    Notification::make()->success()->title('Replay dispatched')->send();
                 }),
             Action::make('cancel')
                 ->color('danger')

@@ -21,6 +21,8 @@ class PanelsRelationManager extends RelationManager
 {
     protected static string $relationship = 'panels';
 
+    protected static ?string $modelLabel = 'panel';
+
     public function form(Schema $schema): Schema
     {
         return $schema->components([

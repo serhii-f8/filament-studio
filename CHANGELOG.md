@@ -24,9 +24,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   collection's delete permission). Force delete also removes the record's values.
 - **"Disabled on Create" and "Disabled on Edit" toggles in the field editor's Behavior section.**
   The options already worked but could only be set through MCP or code.
+- **CSV export and import of records.** The record list has a CSV menu: Export CSV downloads the
+  records currently listed (search, filters and sort applied); Import CSV creates a record per row,
+  matching the header to field column names or labels and validating each row like a REST API
+  write. Bad rows are skipped and reported. Exports omit passwords and defuse spreadsheet formulas.
+- **Studio records in global search.** Records are matched on their text fields across every
+  collection the user may view, and link to the record's view page
+  (`global_search.enabled`, `global_search.limit_per_collection`).
+- **A real record view page.** Records are shown as labelled, formatted values (option labels and
+  colours, images, links, rendered rich text and markdown, related record titles) instead of a
+  greyed-out form, and the heading is the record's title (the collection's display template, or
+  its first text field) rather than the collection name. Edit pages read "Edit <title>".
+  Field types can customise their entry by overriding `toInfolistEntry()`.
+
+### Changed
+
+- **Fields created through MCP or code are filterable by default**, like fields created in the
+  field editor, so the Advanced Filter's field list is no longer empty.
+- **The create form leaves out system-managed fields** (Created At/By, Updated At/By); edit and
+  view still show them read-only.
+- **Collection labels are singular**: a `qa_tasks` collection is "Qa Task" / "Qa Tasks" in the
+  wizard and through MCP (which also accepts `label_plural`).
+- **The flow run page has one Re-run button** (Replay and "Re-run with same payload" did the
+  same thing). It is disabled until the flow is published and asks for confirmation when the run
+  used an older version.
+- **The dashboard form fills the slug from the name and uses a colour picker**; the colour shows
+  in the dashboards table.
 
 ### Fixed
 
+- **Internal model names leaked into the UI** ("New studio field", "Create Studio Panel"); relation
+  managers and dashboards now use plain labels.
+- **The API key form forced a collection permission row**, so an MCP-only key could not be saved.
+- **The collection edit page had two Audit Logs**; the header action (which pointed at a missing
+  view) is gone, the tab stays. **The version history had a Submit button that did nothing**; it
+  now only has Close.
+- **The flow designer said "Draft (unsaved)" as soon as it opened** (React Flow's mount-time
+  measuring counted as edits, and a draft copied from the published version looked unsaved), and
+  **connecting lines looped around when nodes were stacked vertically**; edges now leave and
+  enter on the sides facing each other.
 - **The "Unique" field setting did nothing.** It is enforced in the form, the REST API and MCP,
   within the record's tenant; a record may keep its own value.
 - **Invalid select values were accepted through the REST API and MCP.** Select, radio,

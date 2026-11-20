@@ -35,7 +35,7 @@ it('refreshes the panels table when a panel is added from the page header', func
     $table = Livewire::test(PanelsRelationManager::class, [
         'ownerRecord' => $this->dashboard,
         'pageClass' => EditDashboard::class,
-    ])->assertSee('No studio panels');
+    ])->assertSee('No panels');
 
     StudioPanel::factory()->create(['dashboard_id' => $this->dashboard->id, 'header_label' => 'Fresh panel']);
 

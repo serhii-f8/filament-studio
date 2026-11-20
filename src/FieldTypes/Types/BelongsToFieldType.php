@@ -5,6 +5,8 @@ namespace Flexpik\FilamentStudio\FieldTypes\Types;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\Entry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\TextColumn;
@@ -14,6 +16,7 @@ use Flexpik\FilamentStudio\Enums\EavCast;
 use Flexpik\FilamentStudio\FieldTypes\AbstractFieldType;
 use Flexpik\FilamentStudio\Models\StudioCollection;
 use Flexpik\FilamentStudio\Services\LocaleResolver;
+use Flexpik\FilamentStudio\Support\RecordTitle;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User;
 
@@ -140,6 +143,20 @@ class BelongsToFieldType extends AbstractFieldType
         $user = $model::query()->find($id);
 
         return (string) ($user?->getAttribute('name') ?? $user?->getAttribute('email') ?? $id);
+    }
+
+    public function toInfolistEntry(): ?Entry
+    {
+        $entry = TextEntry::make($this->field->column_name);
+        $relatedSlug = $this->setting('related_collection');
+
+        if (empty($relatedSlug)) {
+            return $this->referencesUser()
+                ? $entry->formatStateUsing(fn (mixed $state): ?string => blank($state) ? null : static::userLabel($state))
+                : $entry;
+        }
+
+        return $entry->formatStateUsing(fn (mixed $state): string => RecordTitle::forKeys($relatedSlug, [$state], $this->setting('display_field'))[(string) $state] ?? (string) $state);
     }
 
     public function toFilter(): ?BaseFilter

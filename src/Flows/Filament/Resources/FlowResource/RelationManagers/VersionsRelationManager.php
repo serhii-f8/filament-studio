@@ -17,6 +17,8 @@ class VersionsRelationManager extends RelationManager
 
     protected static ?string $title = 'Version history';
 
+    protected static ?string $modelLabel = 'version';
+
     public function table(Table $table): Table
     {
         return $table

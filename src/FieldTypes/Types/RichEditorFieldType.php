@@ -6,6 +6,8 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\Entry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\TextColumn;
@@ -67,6 +69,12 @@ class RichEditorFieldType extends AbstractFieldType
             ->formatStateUsing(fn (mixed $state): string => strip_tags((string) $state))
             ->limit(100)
             ->wrap();
+    }
+
+    public function toInfolistEntry(): ?Entry
+    {
+        // Filament sanitizes HTML entries before rendering.
+        return TextEntry::make($this->field->column_name)->html()->prose();
     }
 
     public function toFilter(): ?BaseFilter

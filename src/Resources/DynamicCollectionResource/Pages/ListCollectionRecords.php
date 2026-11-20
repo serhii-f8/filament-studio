@@ -4,7 +4,9 @@ namespace Flexpik\FilamentStudio\Resources\DynamicCollectionResource\Pages;
 
 use Filament\Actions;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -18,8 +20,12 @@ use Flexpik\FilamentStudio\Resources\DynamicCollectionResource;
 use Flexpik\FilamentStudio\Resources\DynamicCollectionResource\Concerns\HasPanelWidgets;
 use Flexpik\FilamentStudio\Resources\DynamicCollectionResource\Concerns\ResolvesCollection;
 use Flexpik\FilamentStudio\Services\EavQueryBuilder;
+use Flexpik\FilamentStudio\Services\RecordCsv;
 use Flexpik\FilamentStudio\Services\RecordSortOrder;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\HtmlString;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ListCollectionRecords extends ListRecords
 {
@@ -197,10 +203,89 @@ class ListCollectionRecords extends ListRecords
                     $this->resetPage();
                 }),
 
+            ActionGroup::make([
+                $this->exportCsvAction(),
+                $this->importCsvAction(),
+            ])
+                ->label('CSV')
+                ->icon('heroicon-m-arrows-up-down')
+                ->color('gray')
+                ->button(),
+
             Actions\CreateAction::make()
                 ->label('Create '.$collection->label)
                 ->visible(fn (): bool => DynamicCollectionResource::canCreate()),
         ];
+    }
+
+    /**
+     * Download the records currently listed (search, filters and sort applied) as CSV.
+     */
+    public function exportCsvAction(): Action
+    {
+        return Action::make('exportCsv')
+            ->label('Export CSV')
+            ->icon('heroicon-o-arrow-down-tray')
+            ->action(function (): StreamedResponse {
+                $collection = $this->getResolvedCollection();
+                $query = $this->getFilteredSortedTableQuery();
+                $tenantId = Filament::getTenant()?->getKey();
+
+                return response()->streamDownload(function () use ($collection, $query, $tenantId): void {
+                    $handle = fopen('php://output', 'w');
+                    RecordCsv::write($collection, $query->cursor(), $handle, $tenantId);
+                    fclose($handle);
+                }, $collection->slug.'-'.now()->format('Y-m-d-His').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+            });
+    }
+
+    /**
+     * Create records from an uploaded CSV whose header row names the fields.
+     */
+    public function importCsvAction(): Action
+    {
+        return Action::make('importCsv')
+            ->label('Import CSV')
+            ->icon('heroicon-o-arrow-up-tray')
+            ->visible(fn (): bool => DynamicCollectionResource::canCreate())
+            ->modalDescription('The first row must name the fields (column names or labels). Each other row becomes a new record. Lists can be JSON or comma-separated; Yes/No columns take 1/0, true/false or yes/no. Tip: export first to get a template.')
+            ->modalSubmitActionLabel('Import')
+            ->schema([
+                FileUpload::make('file')
+                    ->label('CSV file')
+                    ->acceptedFileTypes(['text/csv', 'text/plain', 'application/csv', 'application/vnd.ms-excel'])
+                    ->storeFiles(false)
+                    ->required(),
+            ])
+            ->action(function (array $data): void {
+                /** @var TemporaryUploadedFile $file */
+                $file = $data['file'];
+
+                $result = RecordCsv::import(
+                    $this->getResolvedCollection(),
+                    $file->getRealPath(),
+                    Filament::getTenant()?->getKey(),
+                    auth()->id(),
+                );
+
+                $failed = count($result['failed']);
+                $lines = collect($result['failed'])
+                    ->take(5)
+                    ->map(fn (array $row): string => "Row {$row['row']}: ".implode(' ', $row['errors']));
+
+                if ($result['ignored_columns'] !== []) {
+                    $lines->push('Ignored columns: '.implode(', ', $result['ignored_columns']));
+                }
+
+                Notification::make()
+                    ->title("Imported {$result['created']} ".str($this->getResolvedCollection()->label)->plural($result['created']).($failed ? ", {$failed} rows skipped" : ''))
+                    ->body($lines->isEmpty() ? null : new HtmlString($lines->map(fn (string $line): string => e($line))->implode('<br>')))
+                    ->status($failed ? 'warning' : 'success')
+                    ->persistent($failed > 0)
+                    ->send();
+
+                $this->resetTable();
+            });
     }
 
     protected function getHeaderWidgets(): array

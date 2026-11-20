@@ -5,6 +5,8 @@ namespace Flexpik\FilamentStudio\FieldTypes\Types;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\Entry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\TextColumn;
@@ -70,6 +72,15 @@ class RepeaterFieldType extends AbstractFieldType
         return TextColumn::make($this->field->column_name)
             ->formatStateUsing(fn ($state) => is_array($state) ? count($state).' items' : '0 items')
             ->badge();
+    }
+
+    public function toInfolistEntry(): ?Entry
+    {
+        // One line per row/block, e.g. "name: Ada · role: admin".
+        return TextEntry::make($this->field->column_name)
+            ->listWithLineBreaks()
+            ->bulleted()
+            ->formatStateUsing(fn (mixed $state): string => static::describeValue($state));
     }
 
     public function toFilter(): ?BaseFilter

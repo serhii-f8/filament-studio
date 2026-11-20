@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { ReactFlow, Background, Controls, ReactFlowProvider, addEdge, applyEdgeChanges, applyNodeChanges, useReactFlow } from '@xyflow/react';
+import { ReactFlow, Background, Controls, ReactFlowProvider, addEdge, useReactFlow } from '@xyflow/react';
 import type { Edge, Node } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { createRoot } from 'react-dom/client';
@@ -16,7 +16,9 @@ import { InspectorPanel } from './inspector/InspectorPanel';
 import { TestRunPanel } from './testrun/TestRunPanel';
 
 const nodeTypes = { trigger: TriggerNode, operation: OperationNode };
-const edgeTypes = { branch: BranchEdge };
+// Edges saved without a type would otherwise get React Flow's default bezier, which
+// loops around when nodes are stacked vertically; route them through BranchEdge too.
+export const edgeTypes = { branch: BranchEdge, default: BranchEdge };
 
 export function createNode(type: 'trigger' | 'operation', key: string, label: string, position: { x: number; y: number }): Node {
     return {
@@ -43,7 +45,7 @@ function useFilamentColorMode(): 'light' | 'dark' {
 }
 
 function CanvasInner({ api, flowName, meta }: { api: FlowApi; flowName: string; meta: any }) {
-    const { nodes, edges, dirty, selectedNodeId, loadFlow, setNodes, setEdges, selectNode, updateNodeConfig, markClean, addNode } = useFlowStore();
+    const { nodes, edges, dirty, selectedNodeId, publishedVersion, draftSavedAt, loadFlow, setEdges, applyNodeChanges, applyEdgeChanges, selectNode, updateNodeConfig, markClean, markPublished, addNode } = useFlowStore();
     const [saving, setSaving] = useState(false);
     const [showTestRun, setShowTestRun] = useState(false);
     const [paletteOpen, setPaletteOpen] = useState(false);
@@ -78,8 +80,10 @@ function CanvasInner({ api, flowName, meta }: { api: FlowApi; flowName: string; 
         return () => clearTimeout(t);
     }, [dirty, nodes, edges, api, markClean]);
 
-    const onNodesChange = useCallback((changes: any) => setNodes(applyNodeChanges(changes, nodes)), [nodes, setNodes]);
-    const onEdgesChange = useCallback((changes: any) => setEdges(applyEdgeChanges(changes, edges)), [edges, setEdges]);
+    // Mount-time measurement/selection changes must not mark the draft dirty;
+    // the store only flags changes that alter the saved graph.
+    const onNodesChange = useCallback((changes: any) => applyNodeChanges(changes), [applyNodeChanges]);
+    const onEdgesChange = useCallback((changes: any) => applyEdgeChanges(changes), [applyEdgeChanges]);
     const onConnect = useCallback((conn: any) => setEdges(addEdge({ ...conn, type: 'branch' }, edges)), [edges, setEdges]);
 
     const addAndFocus = useCallback((type: 'trigger' | 'operation', key: string, label: string, position: { x: number; y: number }) => {
@@ -123,6 +127,8 @@ function CanvasInner({ api, flowName, meta }: { api: FlowApi; flowName: string; 
                 flowName={flowName}
                 dirty={dirty}
                 saving={saving}
+                publishedVersion={publishedVersion}
+                draftSavedAt={draftSavedAt}
                 paletteOpen={paletteOpen}
                 fullscreen={fullscreen}
                 onToggleFullscreen={() => setFullscreen(v => !v)}
@@ -137,7 +143,8 @@ function CanvasInner({ api, flowName, meta }: { api: FlowApi; flowName: string; 
                     try {
                         // Publishing snapshots the server-side draft, so unsaved edits go first.
                         if (dirty) { await api.saveGraph({ nodes, edges }); markClean(); }
-                        await api.publish(changeSummary.trim() || undefined);
+                        const published = await api.publish(changeSummary.trim() || undefined);
+                        markPublished(published?.data ?? null);
                     }
                     catch (err) { console.error('[publish] failed:', err); }
                 }}

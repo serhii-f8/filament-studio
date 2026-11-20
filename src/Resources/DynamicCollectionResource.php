@@ -27,10 +27,13 @@ use Flexpik\FilamentStudio\Services\DynamicFormSchemaBuilder;
 use Flexpik\FilamentStudio\Services\DynamicTableColumnsBuilder;
 use Flexpik\FilamentStudio\Services\EavQueryBuilder;
 use Flexpik\FilamentStudio\Services\LocaleResolver;
+use Flexpik\FilamentStudio\Services\RecordGlobalSearch;
 use Flexpik\FilamentStudio\Services\RecordSortOrder;
+use Flexpik\FilamentStudio\Support\RecordTitle;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 class DynamicCollectionResource extends Resource
 {
@@ -139,6 +142,39 @@ class DynamicCollectionResource extends Resource
     public static function getPluralModelLabel(): string
     {
         return static::resolveCollectionOrNull()?->label_plural ?? 'Records';
+    }
+
+    /**
+     * Studio records take part in the panel's global search (one resource serves every
+     * collection, so the search itself spans collections; see RecordGlobalSearch).
+     */
+    public static function canGloballySearch(): bool
+    {
+        return (bool) config('filament-studio.global_search.enabled', true) && auth()->check();
+    }
+
+    public static function getGlobalSearchResults(string $search): Collection
+    {
+        return app(RecordGlobalSearch::class)->search(
+            $search,
+            Filament::getTenant()?->getKey(),
+            (int) config('filament-studio.global_search.limit_per_collection', 5),
+        );
+    }
+
+    /**
+     * The record's display title (collection display template, else its first text field),
+     * used for page headings and breadcrumbs. Falls back to the collection's singular label.
+     */
+    public static function getRecordTitle(?Model $record): string
+    {
+        $collection = static::resolveCollectionOrNull();
+
+        if ($record instanceof StudioRecord && $collection) {
+            return RecordTitle::forRecord($collection, $record) ?? $collection->label;
+        }
+
+        return static::getModelLabel();
     }
 
     public static function getNavigationLabel(): string

@@ -4,6 +4,8 @@ namespace Flexpik\FilamentStudio\FieldTypes\Types;
 
 use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\Entry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\TextColumn;
@@ -52,6 +54,11 @@ class TimeFieldType extends AbstractFieldType
     {
         return TextColumn::make($this->field->column_name)
             ->time($this->setting('seconds') ? 'H:i:s' : 'H:i');
+    }
+
+    public function toInfolistEntry(): ?Entry
+    {
+        return TextEntry::make($this->field->column_name)->time($this->setting('seconds') ? 'H:i:s' : 'H:i');
     }
 
     public function toFilter(): ?BaseFilter

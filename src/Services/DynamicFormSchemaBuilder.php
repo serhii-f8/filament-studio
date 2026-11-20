@@ -30,6 +30,12 @@ class DynamicFormSchemaBuilder
             ->orderBy('sort_order')
             ->get();
 
+        // System-managed fields (Created At/By, Updated At/By) have no value until the record is
+        // saved, so the create form leaves them out; edit and view show them read-only.
+        if ($pageContext === 'create') {
+            $fields = $fields->reject(fn (StudioField $field): bool => ! empty($field->auto_fill_on))->values();
+        }
+
         if ($fields->isEmpty()) {
             return [];
         }

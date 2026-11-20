@@ -31,6 +31,8 @@ class FieldsRelationManager extends RelationManager
 
     protected static ?string $title = 'Fields';
 
+    protected static ?string $modelLabel = 'field';
+
     protected ?array $beforeFieldState = null;
 
     /** Field types whose static choices are stored as studio_field_options rows. */

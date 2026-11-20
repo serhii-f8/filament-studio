@@ -5,6 +5,7 @@ namespace Flexpik\FilamentStudio\Resources\DynamicCollectionResource\Pages;
 use Filament\Actions;
 use Filament\Facades\Filament;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Schema;
 use Flexpik\FilamentStudio\Enums\EavCast;
 use Flexpik\FilamentStudio\Enums\PanelPlacement;
 use Flexpik\FilamentStudio\Models\StudioRecord;
@@ -13,9 +14,11 @@ use Flexpik\FilamentStudio\Resources\DynamicCollectionResource;
 use Flexpik\FilamentStudio\Resources\DynamicCollectionResource\Concerns\HasPanelWidgets;
 use Flexpik\FilamentStudio\Resources\DynamicCollectionResource\Concerns\ResolvesCollection;
 use Flexpik\FilamentStudio\Resources\DynamicCollectionResource\Concerns\RestoresVersions;
+use Flexpik\FilamentStudio\Services\DynamicInfolistBuilder;
 use Flexpik\FilamentStudio\Services\EavQueryBuilder;
 use Flexpik\FilamentStudio\Services\LocaleResolver;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User;
 
 class ViewCollectionRecord extends ViewRecord
 {
@@ -35,7 +38,38 @@ class ViewCollectionRecord extends ViewRecord
 
     public function getTitle(): string
     {
-        return $this->getResolvedCollection()->label;
+        return DynamicCollectionResource::getRecordTitle($this->getRecord());
+    }
+
+    /**
+     * Show the record read-only as an infolist (labels and formatted values) instead of a
+     * disabled copy of the edit form.
+     */
+    public function infolist(Schema $schema): Schema
+    {
+        $collection = $this->getResolvedCollection();
+
+        /** @var User|null $user */
+        $user = auth()->user();
+
+        return $schema
+            ->columns(1)
+            ->constantState($this->recordData())
+            ->components(DynamicInfolistBuilder::build($collection, $this->recordData(), $user));
+    }
+
+    /** @var array<string, mixed>|null */
+    protected ?array $cachedRecordData = null;
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function recordData(): array
+    {
+        return $this->cachedRecordData ??= EavQueryBuilder::for($this->getResolvedCollection())
+            ->tenant(Filament::getTenant()?->getKey())
+            ->locale(app(LocaleResolver::class)->resolve($this->getResolvedCollection()))
+            ->getRecordData($this->getRecord());
     }
 
     /**
@@ -108,6 +142,9 @@ class ViewCollectionRecord extends ViewRecord
                 ->label('Version History')
                 ->icon('heroicon-o-clock')
                 ->slideOver()
+                // Read-only history: no Submit button, only Close.
+                ->modalSubmitAction(false)
+                ->modalCancelActionLabel('Close')
                 // The Restore buttons inside the slide-over mount this as a child action.
                 ->registerModalActions([$this->restoreVersionAction()])
                 ->modalContent(function () {

@@ -8,6 +8,7 @@ use Flexpik\FilamentStudio\Resources\DynamicCollectionResource;
 use Flexpik\FilamentStudio\Resources\DynamicCollectionResource\Pages\CreateCollectionRecord;
 use Flexpik\FilamentStudio\Resources\DynamicCollectionResource\Pages\EditCollectionRecord;
 use Flexpik\FilamentStudio\Resources\DynamicCollectionResource\Pages\ListCollectionRecords;
+use Flexpik\FilamentStudio\Services\EavQueryBuilder;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Carbon;
@@ -52,8 +53,19 @@ beforeEach(function () {
 
 afterEach(fn () => Carbon::setTestNow());
 
-it('shows auto-filled system fields as read-only on the create form', function () {
+it('leaves auto-filled system fields off the create form', function () {
     Livewire::test(CreateCollectionRecord::class, ['collectionSlug' => 'pages'])
+        ->assertFormFieldEnabled('title')
+        ->assertFormFieldDoesNotExist('created_at')
+        ->assertFormFieldDoesNotExist('updated_at')
+        ->assertFormFieldDoesNotExist('created_by')
+        ->assertFormFieldDoesNotExist('updated_by');
+});
+
+it('shows auto-filled system fields read-only on the edit form', function () {
+    $record = EavQueryBuilder::for(StudioCollection::where('slug', 'pages')->first())->create(['title' => 'Hi']);
+
+    Livewire::test(EditCollectionRecord::class, ['collectionSlug' => 'pages', 'record' => $record->uuid])
         ->assertFormFieldEnabled('title')
         ->assertFormFieldDisabled('created_at')
         ->assertFormFieldDisabled('updated_at')

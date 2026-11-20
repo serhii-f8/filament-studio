@@ -3,6 +3,7 @@
 namespace Flexpik\FilamentStudio\FieldTypes\Types;
 
 use Filament\Forms\Components\Hidden;
+use Filament\Infolists\Components\Entry;
 use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Filters\BaseFilter;
@@ -32,6 +33,11 @@ class HiddenFieldType extends AbstractFieldType
     }
 
     public function toTableColumn(): ?Column
+    {
+        return null;
+    }
+
+    public function toInfolistEntry(): ?Entry
     {
         return null;
     }

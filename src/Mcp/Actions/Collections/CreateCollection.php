@@ -27,6 +27,7 @@ class CreateCollection
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'regex:/^[a-z][a-z0-9-]*$/', 'max:255'],
             'label' => ['nullable', 'string', 'max:255'],
+            'label_plural' => ['nullable', 'string', 'max:255'],
             'icon' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'is_singleton' => ['nullable', 'boolean'],
@@ -55,14 +56,14 @@ class CreateCollection
 
         $collection = DB::transaction(function () use ($data, $slug, $tenantId) {
             try {
-                $label = $data['label'] ?? $data['name'];
+                $label = $data['label'] ?? Str::singular(Str::headline($data['name']));
 
                 $collection = StudioCollection::create([
                     'tenant_id' => $tenantId,
                     'name' => $data['name'],
                     'slug' => $slug,
                     'label' => $label,
-                    'label_plural' => Str::plural($label),
+                    'label_plural' => $data['label_plural'] ?? Str::plural($label),
                     'icon' => $data['icon'] ?? null,
                     'description' => $data['description'] ?? null,
                     'is_singleton' => $data['is_singleton'] ?? false,

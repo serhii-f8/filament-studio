@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Filament\Support\Facades\FilamentAsset;
 use Flexpik\FilamentStudio\Flows\Filament\Resources\FlowResource;
 use Flexpik\FilamentStudio\Flows\Models\StudioFlow;
 
@@ -17,21 +18,13 @@ it('the design page returns 200 with canvas mount div and API key meta tag', fun
     $response->assertSee('<meta name="studio-api-key"', false);
 });
 
-it('the flow canvas bundle exists in the Vite manifest', function () {
-    $manifest = '/var/www/html/crud/public/build/manifest.json';
+it('ships the prebuilt flow canvas bundle as a Filament asset', function () {
+    // The canvas is built by the package (resources/dist), not by the host app's Vite.
+    $assets = collect(FilamentAsset::getScripts(['serhii-f8/filament-studio']))
+        ->merge(FilamentAsset::getStyles(['serhii-f8/filament-studio']))
+        ->filter(fn ($asset) => $asset->getId() === 'studio-flow-canvas');
 
-    if (! file_exists($manifest)) {
-        $this->markTestSkipped('Vite manifest not found — run npm run build first.');
-    }
-
-    $contents = json_decode(file_get_contents($manifest), true);
-    $found = false;
-    foreach ($contents as $key => $entry) {
-        if (str_contains($key, 'flow-canvas')) {
-            $found = true;
-            break;
-        }
-    }
-
-    expect($found)->toBeTrue('flow-canvas entry not found in Vite manifest');
+    expect($assets)->toHaveCount(2)
+        ->and(file_exists(__DIR__.'/../../../../resources/dist/flow-canvas.js'))->toBeTrue()
+        ->and(file_exists(__DIR__.'/../../../../resources/dist/flow-canvas.css'))->toBeTrue();
 });

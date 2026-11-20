@@ -5,6 +5,8 @@ namespace Flexpik\FilamentStudio\FieldTypes\Types;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\Entry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\TextColumn;
@@ -14,6 +16,7 @@ use Flexpik\FilamentStudio\Enums\EavCast;
 use Flexpik\FilamentStudio\FieldTypes\AbstractFieldType;
 use Flexpik\FilamentStudio\Models\StudioCollection;
 use Flexpik\FilamentStudio\Services\LocaleResolver;
+use Flexpik\FilamentStudio\Support\RecordTitle;
 
 class BelongsToManyFieldType extends AbstractFieldType
 {
@@ -97,6 +100,21 @@ class BelongsToManyFieldType extends AbstractFieldType
     public function toTableColumn(): ?Column
     {
         return TextColumn::make($this->field->column_name)->badge()->separator(',');
+    }
+
+    public function toInfolistEntry(): ?Entry
+    {
+        $relatedSlug = (string) $this->setting('related_collection');
+        $titles = null;
+
+        return TextEntry::make($this->field->column_name)
+            ->badge()
+            ->formatStateUsing(function (mixed $state) use ($relatedSlug, &$titles): string {
+                // Every badge is formatted separately; resolve each key once.
+                $titles[(string) $state] ??= RecordTitle::forKeys($relatedSlug, [$state], $this->setting('display_field'))[(string) $state] ?? (string) $state;
+
+                return $titles[(string) $state];
+            });
     }
 
     public function toFilter(): ?BaseFilter

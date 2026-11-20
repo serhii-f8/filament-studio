@@ -68,6 +68,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Global Search
+    |--------------------------------------------------------------------------
+    |
+    | Studio records appear in the panel's global search, matched on their text
+    | fields, for every collection the user may view.
+    |
+    */
+    'global_search' => [
+        'enabled' => env('STUDIO_GLOBAL_SEARCH_ENABLED', true),
+        'limit_per_collection' => env('STUDIO_GLOBAL_SEARCH_LIMIT_PER_COLLECTION', 5),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | MCP (Model Context Protocol)
     |--------------------------------------------------------------------------
     |

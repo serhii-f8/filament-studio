@@ -4,6 +4,8 @@ namespace Flexpik\FilamentStudio\FieldTypes\Types;
 
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Select;
+use Filament\Infolists\Components\ColorEntry;
+use Filament\Infolists\Components\Entry;
 use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\ColorColumn;
 use Filament\Tables\Columns\Column;
@@ -51,6 +53,11 @@ class ColorFieldType extends AbstractFieldType
     public function toTableColumn(): ?Column
     {
         return ColorColumn::make($this->field->column_name);
+    }
+
+    public function toInfolistEntry(): ?Entry
+    {
+        return ColorEntry::make($this->field->column_name)->copyable();
     }
 
     public function toFilter(): ?BaseFilter

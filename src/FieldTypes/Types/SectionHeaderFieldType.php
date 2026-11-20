@@ -4,6 +4,7 @@ namespace Flexpik\FilamentStudio\FieldTypes\Types;
 
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\Entry;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\Column;
@@ -63,6 +64,11 @@ class SectionHeaderFieldType extends AbstractFieldType
     }
 
     public function toTableColumn(): ?Column
+    {
+        return null;
+    }
+
+    public function toInfolistEntry(): ?Entry
     {
         return null;
     }

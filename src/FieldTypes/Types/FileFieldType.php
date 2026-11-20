@@ -7,12 +7,15 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\Entry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\BaseFilter;
 use Flexpik\FilamentStudio\Enums\EavCast;
 use Flexpik\FilamentStudio\FieldTypes\AbstractFieldType;
+use Illuminate\Support\Facades\Storage;
 
 class FileFieldType extends AbstractFieldType
 {
@@ -89,6 +92,16 @@ class FileFieldType extends AbstractFieldType
         return TextColumn::make($this->field->column_name)
             ->limit(30)
             ->icon('heroicon-o-paper-clip');
+    }
+
+    public function toInfolistEntry(): ?Entry
+    {
+        $disk = $this->setting('disk', 'public');
+
+        return TextEntry::make($this->field->column_name)
+            ->icon('heroicon-o-paper-clip')
+            ->formatStateUsing(fn (mixed $state): string => basename((string) $state))
+            ->url(fn (mixed $state): ?string => filled($state) && is_string($state) ? Storage::disk($disk)->url($state) : null, shouldOpenInNewTab: true);
     }
 
     public function toFilter(): ?BaseFilter

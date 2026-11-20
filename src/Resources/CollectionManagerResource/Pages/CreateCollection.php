@@ -49,8 +49,10 @@ class CreateCollection extends CreateRecord
                         ->afterStateUpdated(function (Set $set, ?string $state) {
                             if ($state) {
                                 $set('slug', Str::slug($state));
-                                $set('label', Str::headline($state));
-                                $set('label_plural', Str::plural(Str::headline($state)));
+                                // Names are usually plural (blog_posts); the label is the singular form.
+                                $label = Str::singular(Str::headline($state));
+                                $set('label', $label);
+                                $set('label_plural', Str::plural($label));
                             }
                         })
                         ->placeholder('e.g. blog_posts')

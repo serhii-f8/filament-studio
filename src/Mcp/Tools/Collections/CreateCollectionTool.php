@@ -20,7 +20,7 @@ class CreateCollectionTool extends Tool
 
     protected string $name = 'studio_create_collection';
 
-    protected string $description = 'Create a collection. Optional: slug, label, icon, description, is_singleton, api_enabled, enable_versioning, enable_soft_deletes, archive_field, supported_locales, fields[].';
+    protected string $description = 'Create a collection. Optional: slug, label (singular), label_plural, icon, description, is_singleton, api_enabled, enable_versioning, enable_soft_deletes, archive_field, supported_locales, fields[].';
 
     public function schema($schema): array
     {
@@ -28,6 +28,7 @@ class CreateCollectionTool extends Tool
             'name' => $schema->string()->required(),
             'slug' => $schema->string(),
             'label' => $schema->string(),
+            'label_plural' => $schema->string(),
             'icon' => $schema->string(),
             'description' => $schema->string(),
             'is_singleton' => $schema->boolean(),
