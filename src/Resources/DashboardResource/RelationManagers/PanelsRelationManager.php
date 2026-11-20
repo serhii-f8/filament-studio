@@ -6,19 +6,15 @@ use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Facades\Filament;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Section;
-use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Flexpik\FilamentStudio\Enums\PanelPlacement;
 use Flexpik\FilamentStudio\Models\StudioPanel;
-use Flexpik\FilamentStudio\Panels\PanelTypeRegistry;
+use Flexpik\FilamentStudio\Panels\PanelFormSchema;
 use Livewire\Attributes\On;
 
 class PanelsRelationManager extends RelationManager
@@ -27,54 +23,12 @@ class PanelsRelationManager extends RelationManager
 
     public function form(Schema $schema): Schema
     {
-        $registry = app(PanelTypeRegistry::class);
-        $typeOptions = collect($registry->forPlacement(PanelPlacement::Dashboard))
-            ->mapWithKeys(fn (string $class, string $key) => [$key => $class::$label])
-            ->toArray();
-
         return $schema->components([
             Section::make('Panel Type')->schema([
-                Select::make('panel_type')
-                    ->label('Type')
-                    ->options($typeOptions)
-                    ->required()
-                    ->live()
-                    ->afterStateUpdated(function (?string $state, Set $set) use ($registry): void {
-                        // Seed the config container with the panel type's defaults so the
-                        // dependent config fields always hydrate against an array. Without
-                        // this, `config` is null on a fresh panel and Livewire throws
-                        // "Cannot set properties of null (setting 'collection_id')", and
-                        // toggles absent from defaultConfig() log "Livewire Entangle Error".
-                        try {
-                            $set('config', $state ? $registry->get($state)::initialConfig() : []);
-                        } catch (\InvalidArgumentException) {
-                            $set('config', []);
-                        }
-                    }),
+                PanelFormSchema::typeSelect(fn (): PanelPlacement => PanelPlacement::Dashboard),
             ]),
-            Section::make('Header')->schema([
-                Toggle::make('header_visible')
-                    ->label('Show Header')
-                    ->default(true),
-                TextInput::make('header_label')
-                    ->label('Label'),
-                TextInput::make('header_icon')
-                    ->label('Icon'),
-                TextInput::make('header_color')
-                    ->label('Color'),
-                TextInput::make('header_note')
-                    ->label('Note'),
-            ]),
-            Section::make('Configuration')
-                ->statePath('config')
-                ->schema(function (Get $get) use ($registry) {
-                    $panelType = $get('panel_type');
-                    if (! $panelType) {
-                        return [];
-                    }
-
-                    return $registry->configSchema($panelType);
-                }),
+            PanelFormSchema::headerSection(),
+            PanelFormSchema::configSection(),
             Section::make('Grid Size')->schema([
                 TextInput::make('grid_col_span')
                     ->label('Column Span (1-12)')

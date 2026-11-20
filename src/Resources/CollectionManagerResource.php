@@ -19,6 +19,7 @@ use Flexpik\FilamentStudio\Models\StudioCollection;
 use Flexpik\FilamentStudio\Resources\CollectionManagerResource\Pages;
 use Flexpik\FilamentStudio\Resources\CollectionManagerResource\RelationManagers\FieldsRelationManager;
 use Flexpik\FilamentStudio\Resources\CollectionManagerResource\RelationManagers\MigrationLogsRelationManager;
+use Flexpik\FilamentStudio\Resources\CollectionManagerResource\RelationManagers\PanelsRelationManager;
 use Illuminate\Database\Eloquent\Builder;
 
 class CollectionManagerResource extends Resource
@@ -240,6 +241,7 @@ class CollectionManagerResource extends Resource
     {
         return [
             FieldsRelationManager::class,
+            PanelsRelationManager::class,
             MigrationLogsRelationManager::class,
         ];
     }

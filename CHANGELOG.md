@@ -13,6 +13,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   returned in responses. They are now hashed in the storage layer (values the form already hashed
   are kept), and password fields are left out of API and MCP responses.
 
+### Added
+
+- **Collection page panels can be managed in the admin.** The collection editor has a Panels tab
+  for adding, editing, reordering and deleting panels in the Collection Header/Footer and Record
+  Header/Footer placements, which used to be reachable only through MCP or code. Data panels point
+  at the collection by default, and only panel types that support the chosen placement are offered.
+- **A trash for soft-deleted records.** Collections with soft deletes get a "Deleted records"
+  filter on the record list, with Restore and Force delete row and bulk actions (gated by the
+  collection's delete permission). Force delete also removes the record's values.
+- **"Disabled on Create" and "Disabled on Edit" toggles in the field editor's Behavior section.**
+  The options already worked but could only be set through MCP or code.
+
 ### Fixed
 
 - **The "Unique" field setting did nothing.** It is enforced in the form, the REST API and MCP,

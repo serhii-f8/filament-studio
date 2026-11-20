@@ -318,6 +318,12 @@ class FieldsRelationManager extends RelationManager
                     Forms\Components\Toggle::make('is_hidden_in_table')
                         ->label('Hidden in Table')
                         ->helperText('Hide this field from the record listing table.'),
+                    Forms\Components\Toggle::make('is_disabled_on_create')
+                        ->label('Disabled on Create')
+                        ->helperText('Show this field read-only on the create form.'),
+                    Forms\Components\Toggle::make('is_disabled_on_edit')
+                        ->label('Disabled on Edit')
+                        ->helperText('Show this field read-only on the edit form, so its value cannot change after creation.'),
                     Forms\Components\Toggle::make('is_translatable')
                         ->label('Translatable')
                         ->helperText('Store separate values per locale for this field.')

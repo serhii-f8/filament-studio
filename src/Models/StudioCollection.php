@@ -3,6 +3,7 @@
 namespace Flexpik\FilamentStudio\Models;
 
 use Flexpik\FilamentStudio\Database\Factories\StudioCollectionFactory;
+use Flexpik\FilamentStudio\Enums\PanelPlacement;
 use Flexpik\FilamentStudio\Enums\SortDirection;
 use Flexpik\FilamentStudio\Services\EavQueryBuilder;
 use Illuminate\Database\Eloquent\Collection;
@@ -39,6 +40,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, StudioField> $fields
  * @property-read Collection<int, StudioRecord> $records
  * @property-read Collection<int, StudioMigrationLog> $migrationLogs
+ * @property-read Collection<int, StudioPanel> $panels
  */
 class StudioCollection extends Model
 {
@@ -94,6 +96,15 @@ class StudioCollection extends Model
     public function singletonRecord(?int $tenantId): ?StudioRecord
     {
         return $this->records()->where('tenant_id', $tenantId)->orderBy('id')->first();
+    }
+
+    /**
+     * Panels shown on this collection's list and record pages (every placement but Dashboard).
+     */
+    public function panels(): HasMany
+    {
+        return $this->hasMany(StudioPanel::class, 'context_collection_id')
+            ->where('placement', '!=', PanelPlacement::Dashboard->value);
     }
 
     public function migrationLogs(): HasMany

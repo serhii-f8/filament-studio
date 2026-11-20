@@ -353,3 +353,39 @@ it('makes new fields filterable by default and lets the editor turn it off', fun
     $component->callTableAction('edit', $field, data: ['is_filterable' => false])->assertHasNoTableActionErrors();
     expect($field->fresh()->is_filterable)->toBeFalse();
 });
+
+it('saves the disabled on create and disabled on edit options from the field editor', function () {
+    Livewire::test(FieldsRelationManager::class, [
+        'ownerRecord' => $this->collection,
+        'pageClass' => EditCollection::class,
+    ])
+        ->callTableAction('create', data: [
+            'field_type' => 'text',
+            'column_name' => 'code',
+            'label' => 'Code',
+            'eav_cast' => 'text',
+            'is_disabled_on_create' => false,
+            'is_disabled_on_edit' => true,
+        ])
+        ->assertHasNoTableActionErrors();
+
+    $field = StudioField::where('collection_id', $this->collection->id)->where('column_name', 'code')->firstOrFail();
+
+    expect($field->is_disabled_on_create)->toBeFalse()
+        ->and($field->is_disabled_on_edit)->toBeTrue();
+
+    Livewire::test(FieldsRelationManager::class, [
+        'ownerRecord' => $this->collection,
+        'pageClass' => EditCollection::class,
+    ])
+        ->mountTableAction('edit', $field)
+        ->assertTableActionDataSet(['is_disabled_on_create' => false, 'is_disabled_on_edit' => true])
+        ->setTableActionData(['is_disabled_on_create' => true, 'is_disabled_on_edit' => false])
+        ->callMountedTableAction()
+        ->assertHasNoTableActionErrors();
+
+    $field->refresh();
+
+    expect($field->is_disabled_on_create)->toBeTrue()
+        ->and($field->is_disabled_on_edit)->toBeFalse();
+});

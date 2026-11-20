@@ -7,10 +7,15 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Flexpik\FilamentStudio\Filtering\FilterGroup;
 use Flexpik\FilamentStudio\Models\StudioCollection;
@@ -191,22 +196,52 @@ class DynamicCollectionResource extends Resource
             )
             ->authorizeReorder(fn (): bool => static::canEdit(null))
             ->columns(DynamicTableColumnsBuilder::build($collection))
-            ->filters(DynamicFiltersBuilder::build($collection))
+            ->filters([
+                ...DynamicFiltersBuilder::build($collection),
+                ...($collection->enable_soft_deletes ? [TrashedFilter::make()] : []),
+            ])
             ->actions([
-                ViewAction::make(),
+                ViewAction::make()
+                    ->hidden(fn (StudioRecord $record): bool => $record->trashed()),
                 EditAction::make()
-                    ->visible(fn (): bool => static::canEdit(null)),
+                    ->visible(fn (StudioRecord $record): bool => ! $record->trashed() && static::canEdit(null)),
                 DeleteAction::make()
                     ->using(fn (StudioRecord $record) => static::deleteRecord($collection, $record))
                     ->visible(fn (): bool => static::canDelete(null)),
+                RestoreAction::make()
+                    ->using(fn (StudioRecord $record) => static::restoreRecord($collection, $record))
+                    ->authorize(fn (): bool => static::canDelete(null)),
+                ForceDeleteAction::make()
+                    ->using(fn (StudioRecord $record) => static::forceDeleteRecord($collection, $record))
+                    ->authorize(fn (): bool => static::canDelete(null)),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->using(fn (EloquentCollection $records) => $records->each(fn (StudioRecord $record) => static::deleteRecord($collection, $record)))
                         ->visible(fn (): bool => static::canDelete(null)),
+                    RestoreBulkAction::make()
+                        ->using(fn (EloquentCollection $records) => $records->filter->trashed()->each(fn (StudioRecord $record) => static::restoreRecord($collection, $record)))
+                        ->visible(fn (): bool => $collection->enable_soft_deletes && static::canDelete(null)),
+                    ForceDeleteBulkAction::make()
+                        ->using(fn (EloquentCollection $records) => $records->filter->trashed()->each(fn (StudioRecord $record) => static::forceDeleteRecord($collection, $record)))
+                        ->visible(fn (): bool => $collection->enable_soft_deletes && static::canDelete(null)),
                 ]),
             ]);
+    }
+
+    public static function restoreRecord(StudioCollection $collection, StudioRecord $record): bool
+    {
+        EavQueryBuilder::for($collection)->restore($record->id);
+
+        return true;
+    }
+
+    public static function forceDeleteRecord(StudioCollection $collection, StudioRecord $record): bool
+    {
+        EavQueryBuilder::for($collection)->forceDelete($record->id);
+
+        return true;
     }
 
     /**

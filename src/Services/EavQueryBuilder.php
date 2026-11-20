@@ -195,9 +195,10 @@ class EavQueryBuilder
 
     protected function buildBaseQuery(): Builder
     {
+        // Trashed records are excluded by StudioRecord's SoftDeletes global scope rather than an
+        // explicit whereNull, so callers (e.g. Filament's TrashedFilter) can opt into them.
         $query = StudioRecord::query()
-            ->where("{$this->recordsTable}.collection_id", $this->collection->id)
-            ->whereNull("{$this->recordsTable}.deleted_at");
+            ->where("{$this->recordsTable}.collection_id", $this->collection->id);
 
         if ($this->tenantId !== null) {
             $query->where("{$this->recordsTable}.tenant_id", $this->tenantId);
@@ -1096,6 +1097,40 @@ class EavQueryBuilder
                 $record->forceDelete();
             });
         }
+    }
+
+    /**
+     * Bring a soft-deleted record back.
+     */
+    public function restore(int $recordId): void
+    {
+        $this->trashedRecord($recordId)->restore();
+    }
+
+    /**
+     * Permanently remove a soft-deleted record and its values.
+     */
+    public function forceDelete(int $recordId): void
+    {
+        $record = $this->trashedRecord($recordId);
+
+        DB::transaction(function () use ($record) {
+            StudioValue::where('record_id', $record->id)->delete();
+            $record->forceDelete();
+        });
+    }
+
+    protected function trashedRecord(int $recordId): StudioRecord
+    {
+        $query = StudioRecord::onlyTrashed()
+            ->where('collection_id', $this->collection->id)
+            ->whereKey($recordId);
+
+        if ($this->tenantId !== null) {
+            $query->where('tenant_id', $this->tenantId);
+        }
+
+        return $query->firstOrFail();
     }
 
     /**
