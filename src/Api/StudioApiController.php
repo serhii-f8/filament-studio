@@ -6,14 +6,13 @@ use Flexpik\FilamentStudio\Api\Resources\RecordCollection;
 use Flexpik\FilamentStudio\Api\Resources\RecordResource;
 use Flexpik\FilamentStudio\Models\StudioApiKey;
 use Flexpik\FilamentStudio\Models\StudioCollection;
-use Flexpik\FilamentStudio\Models\StudioField;
 use Flexpik\FilamentStudio\Models\StudioRecord;
 use Flexpik\FilamentStudio\Services\EavQueryBuilder;
 use Flexpik\FilamentStudio\Services\LocaleResolver;
+use Flexpik\FilamentStudio\Services\RecordInputRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Collection;
 
 class StudioApiController extends Controller
 {
@@ -50,12 +49,14 @@ class StudioApiController extends Controller
     public function index(Request $request, string $collection_slug): RecordCollection
     {
         $collection = $this->resolveCollection($request, $collection_slug);
-        $perPage = min((int) $request->query('per_page', 25), 100);
+        $perPage = (int) $request->query('per_page', 25);
+        $perPage = $perPage < 1 ? 25 : min($perPage, 100);
 
         $paginator = StudioRecord::query()
             ->where('collection_id', $collection->id)
             ->whereNull('deleted_at')
             ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->paginate($perPage);
 
         $resourceCollection = new RecordCollection($paginator);
@@ -77,6 +78,7 @@ class StudioApiController extends Controller
 
         if ($this->isAllLocales($request)) {
             $data = EavQueryBuilder::for($collection)->getAllLocaleData($record);
+            $data = RecordResource::presentData($collection, $data);
 
             return response()->json([
                 'data' => [
@@ -97,7 +99,7 @@ class StudioApiController extends Controller
         return response()->json([
             'data' => [
                 'uuid' => $record->uuid,
-                'data' => $result['data'],
+                'data' => RecordResource::presentData($collection, $result['data']),
                 'created_by' => $record->created_by,
                 'updated_by' => $record->updated_by,
                 'created_at' => $record->created_at?->toIso8601String(),
@@ -116,7 +118,7 @@ class StudioApiController extends Controller
         $fields = EavQueryBuilder::getCachedFields($collection);
         $locale = $this->resolveLocale($request, $collection);
 
-        $rules = $this->buildStoreRules($fields);
+        $rules = RecordInputRules::for($collection, $fields, 'store');
         $validated = $request->validate($rules);
 
         $data = $validated['data'] ?? [];
@@ -132,7 +134,7 @@ class StudioApiController extends Controller
         return response()->json([
             'data' => [
                 'uuid' => $record->uuid,
-                'data' => $recordData,
+                'data' => RecordResource::presentData($collection, $recordData),
                 'created_by' => $record->created_by,
                 'updated_by' => $record->updated_by,
                 'created_at' => $record->created_at?->toIso8601String(),
@@ -153,21 +155,23 @@ class StudioApiController extends Controller
 
         $fields = EavQueryBuilder::getCachedFields($collection);
         $locale = $this->resolveLocale($request, $collection);
-        $rules = $this->buildUpdateRules($fields);
+        $rules = RecordInputRules::for($collection, $fields, 'update', $record->id);
         $validated = $request->validate($rules);
 
         $data = $validated['data'] ?? [];
 
         EavQueryBuilder::for($collection)->locale($locale)->update($record->id, $data);
 
+        $record = $record->fresh();
+
         $recordData = EavQueryBuilder::for($collection)
             ->locale($locale)
-            ->getRecordData($record->fresh());
+            ->getRecordData($record);
 
         return response()->json([
             'data' => [
                 'uuid' => $record->uuid,
-                'data' => $recordData,
+                'data' => RecordResource::presentData($collection, $recordData),
                 'created_by' => $record->created_by,
                 'updated_by' => $record->updated_by,
                 'created_at' => $record->created_at?->toIso8601String(),
@@ -189,73 +193,5 @@ class StudioApiController extends Controller
         EavQueryBuilder::for($collection)->delete($record->id);
 
         return response()->json(null, 204);
-    }
-
-    /**
-     * @return array<string, array<string>>
-     */
-    protected function buildStoreRules(Collection $fields): array
-    {
-        $rules = [];
-
-        /** @var StudioField $field */
-        foreach ($fields as $field) {
-            if ($field->is_system) {
-                continue;
-            }
-
-            $fieldRules = $field->is_required ? ['required'] : ['nullable'];
-            $fieldRules = array_merge($fieldRules, $this->typeRules($field));
-
-            if (! empty($field->validation_rules)) {
-                $fieldRules = array_merge($fieldRules, $field->validation_rules);
-            }
-
-            $rules['data.'.$field->column_name] = $fieldRules;
-        }
-
-        return $rules;
-    }
-
-    /**
-     * @return array<string, array<string>>
-     */
-    protected function buildUpdateRules(Collection $fields): array
-    {
-        $rules = [];
-
-        /** @var StudioField $field */
-        foreach ($fields as $field) {
-            if ($field->is_system) {
-                continue;
-            }
-
-            $fieldRules = ['sometimes'];
-            $fieldRules = array_merge($fieldRules, $this->typeRules($field));
-
-            if (! empty($field->validation_rules)) {
-                $fieldRules = array_merge($fieldRules, $field->validation_rules);
-            }
-
-            $rules['data.'.$field->column_name] = $fieldRules;
-        }
-
-        return $rules;
-    }
-
-    /**
-     * @return array<string>
-     */
-    protected function typeRules(StudioField $field): array
-    {
-        return match ($field->eav_cast->value) {
-            'text' => ['string'],
-            'integer' => ['integer'],
-            'decimal' => ['numeric'],
-            'boolean' => ['boolean'],
-            'datetime' => ['date'],
-            'json' => ['array'],
-            default => ['string'],
-        };
     }
 }

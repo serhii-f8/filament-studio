@@ -8,10 +8,25 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Laravel\Mcp\Response;
 use Throwable;
 
 class StudioMcpExceptionHandler
 {
+    /**
+     * Build an MCP tool response flagged with isError: true, so clients do not
+     * mistake authorization, not-found, validation or confirm-token failures
+     * for successful calls. The body keeps the structured {code, message, data}
+     * payload produced by toResponse().
+     */
+    public function toMcpResponse(Throwable $e): Response
+    {
+        return Response::error(json_encode(
+            $this->toResponse($e),
+            JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
+        ));
+    }
+
     /**
      * @return array{code: string, message: string, data: array<string, mixed>}
      */

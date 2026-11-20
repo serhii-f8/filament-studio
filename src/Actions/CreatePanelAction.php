@@ -8,6 +8,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Set;
 use Flexpik\FilamentStudio\Enums\PanelPlacement;
 use Flexpik\FilamentStudio\Models\StudioPanel;
 use Flexpik\FilamentStudio\Panels\PanelTypeRegistry;
@@ -68,7 +69,17 @@ class CreatePanelAction extends Action
                             ->label('Type')
                             ->options($typeOptions)
                             ->required()
-                            ->live(),
+                            ->live()
+                            ->afterStateUpdated(function (?string $state, Set $set) use ($registry): void {
+                                // Seed every config path of the new type before its fields render;
+                                // toggles entangle their path and an undefined one logs
+                                // "Livewire Entangle Error" in the browser.
+                                try {
+                                    $set('config', $state ? $registry->get($state)::initialConfig() : []);
+                                } catch (\InvalidArgumentException) {
+                                    $set('config', []);
+                                }
+                            }),
                     ]),
                     Section::make('Header')->schema([
                         Toggle::make('header_visible')

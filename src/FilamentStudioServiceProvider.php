@@ -8,6 +8,7 @@ use Flexpik\FilamentStudio\Api\Flows\StudioFlowsApiRouteRegistrar;
 use Flexpik\FilamentStudio\Api\OpenApi\StudioDocumentTransformer;
 use Flexpik\FilamentStudio\Api\OpenApi\StudioOperationTransformer;
 use Flexpik\FilamentStudio\Api\StudioApiRouteRegistrar;
+use Flexpik\FilamentStudio\Commands\RepairJsonStorageCommand;
 use Flexpik\FilamentStudio\Commands\RepairSystemFieldsCommand;
 use Flexpik\FilamentStudio\FieldTypes\FieldTypeRegistry;
 use Flexpik\FilamentStudio\FieldTypes\Types;
@@ -121,6 +122,7 @@ class FilamentStudioServiceProvider extends PackageServiceProvider
                 'z_add_observability_columns_to_flow_runs_and_steps',
                 'z_add_duration_ms_to_flow_run_steps',
                 'z_repair_system_fields',
+                'z_repair_json_storage',
             ])
             ->hasViews();
     }
@@ -245,6 +247,7 @@ class FilamentStudioServiceProvider extends PackageServiceProvider
         $this->bootFlowScheduler();
         $this->commands([
             RepairSystemFieldsCommand::class,
+            RepairJsonStorageCommand::class,
             BackfillFlowVersioningCommand::class,
             DispatchScheduledFlowsCommand::class,
         ]);

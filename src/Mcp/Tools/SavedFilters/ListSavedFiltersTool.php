@@ -12,7 +12,6 @@ use Flexpik\FilamentStudio\Mcp\Support\StudioScope;
 use Flexpik\FilamentStudio\Mcp\Support\ToolAuthorizes;
 use Flexpik\FilamentStudio\Models\StudioCollection;
 use Flexpik\FilamentStudio\Models\StudioSavedFilter;
-use Illuminate\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
@@ -60,7 +59,7 @@ class ListSavedFiltersTool extends Tool
                 'saved_filters' => $filters->map(fn ($f) => $serializer->savedFilter($f))->all(),
             ]);
         } catch (\Throwable $e) {
-            return Response::json((new StudioMcpExceptionHandler)->toResponse($e));
+            return (new StudioMcpExceptionHandler)->toMcpResponse($e);
         }
     }
 }

@@ -11,7 +11,6 @@ use Flexpik\FilamentStudio\Mcp\Support\StudioApiKeyContext;
 use Flexpik\FilamentStudio\Mcp\Support\StudioScope;
 use Flexpik\FilamentStudio\Mcp\Support\ToolAuthorizes;
 use Flexpik\FilamentStudio\Models\StudioDashboard;
-use Illuminate\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
@@ -48,7 +47,7 @@ class GetDashboardTool extends Tool
 
             return Response::json(['dashboard' => (new McpSerializer)->dashboard($dashboard)]);
         } catch (\Throwable $e) {
-            return Response::json((new StudioMcpExceptionHandler)->toResponse($e));
+            return (new StudioMcpExceptionHandler)->toMcpResponse($e);
         }
     }
 }

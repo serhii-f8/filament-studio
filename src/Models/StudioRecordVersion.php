@@ -61,6 +61,15 @@ class StudioRecordVersion extends Model
         );
     }
 
+    /**
+     * Order newest first. One edit writes a before and an after snapshot in
+     * the same second, so `id` breaks the created_at tie.
+     */
+    public function scopeLatestFirst($query)
+    {
+        return $query->orderByDesc('created_at')->orderByDesc('id');
+    }
+
     public function scopeForTenant($query, ?int $tenantId)
     {
         if ($tenantId === null) {

@@ -18,6 +18,7 @@ use Flexpik\FilamentStudio\Resources\DynamicCollectionResource;
 use Flexpik\FilamentStudio\Resources\DynamicCollectionResource\Concerns\HasPanelWidgets;
 use Flexpik\FilamentStudio\Resources\DynamicCollectionResource\Concerns\ResolvesCollection;
 use Flexpik\FilamentStudio\Services\EavQueryBuilder;
+use Flexpik\FilamentStudio\Services\RecordSortOrder;
 use Illuminate\Database\Eloquent\Builder;
 
 class ListCollectionRecords extends ListRecords
@@ -71,6 +72,32 @@ class ListCollectionRecords extends ListRecords
             ->applyFilterToQuery($query);
 
         return $query;
+    }
+
+    /**
+     * Persist a drag-and-drop order. Filament's default writes the reorder column on the records
+     * table, but `sort_order` lives in studio_values, so write the positions there instead.
+     *
+     * @param  array<int | string>  $order
+     */
+    public function reorderTable(array $order, int|string|null $draggedRecordKey = null): void
+    {
+        $table = $this->getTable();
+
+        if (! $table->isReorderable()) {
+            return;
+        }
+
+        $table->callBeforeReordering($order);
+
+        RecordSortOrder::reorder(
+            $this->getResolvedCollection(),
+            $order,
+            Filament::getTenant()?->getKey(),
+            $table->getReorderDirection(),
+        );
+
+        $table->callAfterReordering($order);
     }
 
     protected function getHeaderActions(): array

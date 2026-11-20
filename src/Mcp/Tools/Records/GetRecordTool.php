@@ -13,7 +13,6 @@ use Flexpik\FilamentStudio\Mcp\Support\ToolAuthorizes;
 use Flexpik\FilamentStudio\Models\StudioCollection;
 use Flexpik\FilamentStudio\Models\StudioRecord;
 use Flexpik\FilamentStudio\Services\EavQueryBuilder;
-use Illuminate\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
@@ -64,6 +63,7 @@ class GetRecordTool extends Tool
 
             if ($request->get('all_locales') === true) {
                 $data = EavQueryBuilder::for($collection)->getAllLocaleData($record);
+                $data = array_diff_key($data, array_flip(EavQueryBuilder::secretColumns($collection)));
 
                 return Response::json([
                     'record' => (new McpSerializer)->record($record, $data, null),
@@ -72,12 +72,13 @@ class GetRecordTool extends Tool
 
             $locale = $request->get('locale');
             $data = EavQueryBuilder::for($collection)->locale($locale)->getRecordData($record);
+            $data = array_diff_key($data, array_flip(EavQueryBuilder::secretColumns($collection)));
 
             return Response::json([
                 'record' => (new McpSerializer)->record($record, $data, $locale),
             ]);
         } catch (\Throwable $e) {
-            return Response::json((new StudioMcpExceptionHandler)->toResponse($e));
+            return (new StudioMcpExceptionHandler)->toMcpResponse($e);
         }
     }
 }

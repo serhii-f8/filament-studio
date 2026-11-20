@@ -2,6 +2,8 @@
 
 namespace Flexpik\FilamentStudio\Resources\CollectionManagerResource\Pages;
 
+use Closure;
+use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Resources\Pages\CreateRecord\Concerns\HasWizard;
@@ -16,6 +18,7 @@ use Flexpik\FilamentStudio\Models\StudioMigrationLog;
 use Flexpik\FilamentStudio\Resources\CollectionManagerResource;
 use Flexpik\FilamentStudio\Support\PermissionRegistrar;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Unique;
 
 class CreateCollection extends CreateRecord
 {
@@ -35,7 +38,13 @@ class CreateCollection extends CreateRecord
                         ->required()
                         ->maxLength(64)
                         ->regex('/^[a-z][a-z0-9_]*$/')
-                        ->unique(StudioCollection::class, 'name')
+                        // Names (and slugs) are unique per tenant, matching the DB's (tenant_id, name) index.
+                        ->unique(StudioCollection::class, 'name', modifyRuleUsing: fn (Unique $rule): Unique => static::scopeUniqueRuleToCurrentTenant($rule))
+                        ->rule(fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
+                            if (is_string($value) && static::slugIsTakenInCurrentTenant(Str::slug($value))) {
+                                $fail('A collection with the slug "'.Str::slug($value).'" already exists.');
+                            }
+                        })
                         ->live(onBlur: true)
                         ->afterStateUpdated(function (Set $set, ?string $state) {
                             if ($state) {
@@ -150,9 +159,33 @@ class CreateCollection extends CreateRecord
             $data['slug'] = Str::slug($data['name']);
         }
 
+        $data['tenant_id'] ??= static::currentTenantId();
+
         unset($data['system_fields'], $data['multilingual_enabled']);
 
         return $data;
+    }
+
+    protected static function currentTenantId(): mixed
+    {
+        return Filament::getTenant()?->getKey();
+    }
+
+    protected static function scopeUniqueRuleToCurrentTenant(Unique $rule): Unique
+    {
+        $tenantId = static::currentTenantId();
+
+        return $tenantId === null ? $rule->whereNull('tenant_id') : $rule->where('tenant_id', $tenantId);
+    }
+
+    protected static function slugIsTakenInCurrentTenant(string $slug): bool
+    {
+        $tenantId = static::currentTenantId();
+
+        return StudioCollection::query()
+            ->where('slug', $slug)
+            ->when($tenantId === null, fn ($query) => $query->whereNull('tenant_id'), fn ($query) => $query->where('tenant_id', $tenantId))
+            ->exists();
     }
 
     protected function afterCreate(): void
@@ -201,6 +234,7 @@ class CreateCollection extends CreateRecord
             'auto_fill_on' => $definition['auto_fill_on'] ?? null,
             'auto_fill_value' => $definition['auto_fill_value'] ?? null,
             'settings' => $definition['settings'] ?? null,
+            'default_value' => $definition['default_value'] ?? null,
         ]);
 
         // Select fields read their static choices from studio_field_options, not from settings.
@@ -225,6 +259,7 @@ class CreateCollection extends CreateRecord
                 'field_type' => 'select',
                 'eav_cast' => 'text',
                 'is_required' => true,
+                'default_value' => 'draft',
                 'settings' => [
                     'options_source' => 'static',
                 ],

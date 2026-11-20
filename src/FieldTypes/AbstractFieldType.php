@@ -8,7 +8,9 @@ use Filament\Tables\Filters\BaseFilter;
 use Flexpik\FilamentStudio\Enums\EavCast;
 use Flexpik\FilamentStudio\Enums\FieldWidth;
 use Flexpik\FilamentStudio\Models\StudioField;
+use Flexpik\FilamentStudio\Rules\EavUniqueRule;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 
 abstract class AbstractFieldType
@@ -101,6 +103,12 @@ abstract class AbstractFieldType
             $component->placeholder($this->field->getTranslatedAttribute('placeholder'));
         }
 
+        // Applied by Filament only when the form is filled without a record (the create page).
+        $default = $this->field->typedDefaultValue();
+        if ($default !== null && method_exists($component, 'default')) {
+            $component->default($default);
+        }
+
         if (method_exists($component, 'hint') && $this->field->hint) {
             $component->hint($this->field->getTranslatedAttribute('hint'));
         }
@@ -164,6 +172,17 @@ abstract class AbstractFieldType
 
         if (! empty($rules)) {
             $component->rules($rules);
+        }
+
+        if ($this->field->is_unique && method_exists($component, 'rule')) {
+            $field = $this->field;
+
+            $component->rule(fn (?Model $record): EavUniqueRule => new EavUniqueRule(
+                $field,
+                $field->collection,
+                $field->collection->tenant_id,
+                $record?->getKey(),
+            ));
         }
 
         return $component;

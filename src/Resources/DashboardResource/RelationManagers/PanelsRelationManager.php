@@ -42,9 +42,10 @@ class PanelsRelationManager extends RelationManager
                         // Seed the config container with the panel type's defaults so the
                         // dependent config fields always hydrate against an array. Without
                         // this, `config` is null on a fresh panel and Livewire throws
-                        // "Cannot set properties of null (setting 'collection_id')".
+                        // "Cannot set properties of null (setting 'collection_id')", and
+                        // toggles absent from defaultConfig() log "Livewire Entangle Error".
                         try {
-                            $set('config', $state ? $registry->get($state)::defaultConfig() : []);
+                            $set('config', $state ? $registry->get($state)::initialConfig() : []);
                         } catch (\InvalidArgumentException) {
                             $set('config', []);
                         }

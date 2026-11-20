@@ -113,7 +113,7 @@ class ViewCollectionRecord extends ViewRecord
 
                     $versions = StudioRecordVersion::with('creator')
                         ->where('record_id', $record->id)
-                        ->orderByDesc('created_at')
+                        ->latestFirst()
                         ->get();
 
                     $fields = $collection->fields()->get();

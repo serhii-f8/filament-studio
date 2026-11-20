@@ -97,3 +97,17 @@ it('runs automatically as part of the package migrations', function () {
     expect($migrations)->toContain('z_repair_system_fields.php.stub')
         ->and(file_get_contents(__DIR__.'/../../../database/migrations/z_repair_system_fields.php.stub'))->toContain("Artisan::call('studio:repair-system-fields')");
 });
+
+it('gives existing Status system fields a draft default', function () {
+    $status = legacyStatusField($this->collection);
+    $custom = StudioField::factory()->create([
+        'collection_id' => $this->collection->id, 'column_name' => 'status', 'field_type' => 'select',
+        'eav_cast' => 'text', 'is_system' => true, 'default_value' => 'published',
+        'collection_id' => StudioCollection::factory()->create()->id,
+    ]);
+
+    $this->artisan('studio:repair-system-fields')->assertSuccessful();
+
+    expect($status->fresh()->default_value)->toBe('draft')
+        ->and($custom->fresh()->default_value)->toBe('published');
+});

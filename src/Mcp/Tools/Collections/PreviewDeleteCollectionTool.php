@@ -16,7 +16,6 @@ use Flexpik\FilamentStudio\Models\StudioCollection;
 use Flexpik\FilamentStudio\Models\StudioPanel;
 use Flexpik\FilamentStudio\Models\StudioRecord;
 use Flexpik\FilamentStudio\Models\StudioSavedFilter;
-use Illuminate\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
@@ -94,7 +93,7 @@ class PreviewDeleteCollectionTool extends Tool
                 'expires_at' => $token['expires_at'],
             ]);
         } catch (\Throwable $e) {
-            return Response::json((new StudioMcpExceptionHandler)->toResponse($e));
+            return (new StudioMcpExceptionHandler)->toMcpResponse($e);
         }
     }
 }

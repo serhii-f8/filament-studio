@@ -127,6 +127,27 @@ class StudioField extends Model
     }
 
     /**
+     * The stored default_value (always text) converted to the field's storage type.
+     * Returns null when the field has no default.
+     */
+    public function typedDefaultValue(): mixed
+    {
+        $raw = $this->default_value;
+
+        if ($raw === null || $raw === '') {
+            return null;
+        }
+
+        return match ($this->eav_cast) {
+            EavCast::Integer => (int) $raw,
+            EavCast::Decimal => (float) $raw,
+            EavCast::Boolean => filter_var($raw, FILTER_VALIDATE_BOOLEAN),
+            EavCast::Json => json_decode($raw, true) ?? [$raw],
+            default => $raw,
+        };
+    }
+
+    /**
      * Get a field attribute with locale-aware translation from the translations JSON.
      * Falls back to the base attribute value if no translation exists.
      */

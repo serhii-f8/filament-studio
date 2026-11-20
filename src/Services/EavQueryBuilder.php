@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class EavQueryBuilder
@@ -63,6 +64,20 @@ class EavQueryBuilder
         $this->fieldsTable = (new StudioField)->getTable();
         $this->valuesTable = (new StudioValue)->getTable();
         $this->recordsTable = (new StudioRecord)->getTable();
+    }
+
+    /**
+     * Columns whose stored value must never leave the package (password hashes).
+     *
+     * @return array<int, string>
+     */
+    public static function secretColumns(StudioCollection $collection): array
+    {
+        return static::getCachedFields($collection)
+            ->where('field_type', 'password')
+            ->pluck('column_name')
+            ->values()
+            ->all();
     }
 
     public static function for(StudioCollection $collection): self
@@ -995,13 +1010,17 @@ class EavQueryBuilder
     public function create(array $data, ?int $userId = null): StudioRecord
     {
         return DB::transaction(function () use ($data, $userId) {
+            $data = $this->applyNextSortOrder($data);
             $record = StudioRecord::create([
                 'uuid' => (string) Str::uuid(),
                 'collection_id' => $this->collection->id,
-                'tenant_id' => $this->tenantId,
+                // A record always belongs to its collection's tenant; API/MCP callers never set one.
+                'tenant_id' => $this->tenantId ?? $this->collection->tenant_id,
                 'created_by' => $userId,
                 'updated_by' => $userId,
             ]);
+
+            $data = $this->applyDefaults($data);
 
             $this->bulkInsertValues($record->id, $this->applyAutoFill($data, 'create', $userId));
 
@@ -1046,7 +1065,7 @@ class EavQueryBuilder
                     'val_datetime' => null,
                     'val_json' => null,
                 ];
-                $updateData[$column] = $this->prepareValueForStorage($value, $cast);
+                $updateData[$column] = $this->prepareValueForStorage($this->prepareFieldValue($field, $value), $cast);
 
                 StudioValue::updateOrCreate(
                     [
@@ -1132,7 +1151,47 @@ class EavQueryBuilder
             }
         }
 
+        // Record the restored state. touch() alone fires no model events when updated_at
+        // is unchanged (same second), so capture it explicitly; duplicates are skipped.
+        if (isset($observer)) {
+            $observer->updated($record);
+        }
+
         $record->touch();
+    }
+
+    /**
+     * Give a new record the next manual sort position when the collection has a `sort_order` system field.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function applyNextSortOrder(array $data): array
+    {
+        return RecordSortOrder::fillNext($this->collection, $this->tenantId ?? $this->collection->tenant_id, $data);
+    }
+
+    /**
+     * Fill fields missing from $data with their configured default_value.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function applyDefaults(array $data): array
+    {
+        foreach ($this->getFields() as $field) {
+            if (array_key_exists($field->column_name, $data)) {
+                continue;
+            }
+
+            $default = $field->typedDefaultValue();
+
+            if ($default !== null) {
+                $data[$field->column_name] = $default;
+            }
+        }
+
+        return $data;
     }
 
     /**
@@ -1192,7 +1251,7 @@ class EavQueryBuilder
                 'val_datetime' => null,
                 'val_json' => null,
             ];
-            $row[$column] = $this->prepareValueForStorage($value, $cast);
+            $row[$column] = $this->prepareValueForStorage($this->prepareFieldValue($field, $value), $cast);
 
             $inserts[] = $row;
         }
@@ -1200,6 +1259,20 @@ class EavQueryBuilder
         if (! empty($inserts)) {
             StudioValue::insert($inserts);
         }
+    }
+
+    /**
+     * Field-type specific transformation applied to every write, whatever the entry point
+     * (form, REST API, MCP, flows or code). Passwords are hashed unless they already are,
+     * since the Filament form hashes them itself before saving.
+     */
+    protected function prepareFieldValue(StudioField $field, mixed $value): mixed
+    {
+        if ($field->field_type === 'password' && is_string($value) && $value !== '') {
+            return Hash::isHashed($value) ? $value : Hash::make($value);
+        }
+
+        return $value;
     }
 
     protected function prepareValueForStorage(mixed $value, EavCast $cast): mixed
@@ -1214,7 +1287,9 @@ class EavQueryBuilder
             EavCast::Decimal => (float) $value,
             EavCast::Boolean => (bool) $value ? 1 : 0,
             EavCast::Datetime => $this->prepareDatetimeValue($value),
-            EavCast::Json => is_string($value) ? $value : json_encode($value),
+            // Only strings that already are JSON may go in as-is; anything else must be encoded,
+            // or the column holds malformed JSON that breaks every query touching it.
+            EavCast::Json => is_string($value) && json_validate($value) ? $value : json_encode($value),
         };
     }
 

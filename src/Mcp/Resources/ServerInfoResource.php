@@ -8,6 +8,7 @@ use Flexpik\FilamentStudio\Enums\FilterOperator;
 use Flexpik\FilamentStudio\FieldTypes\FieldTypeRegistry;
 use Flexpik\FilamentStudio\Mcp\Support\StudioApiKeyContext;
 use Flexpik\FilamentStudio\Panels\PanelTypeRegistry;
+use Flexpik\FilamentStudio\Support\PackageVersion;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
@@ -55,6 +56,6 @@ class ServerInfoResource extends Resource
 
     protected function packageVersion(): string
     {
-        return config('filament-studio.version', '0.0.0-dev');
+        return (string) (config('filament-studio.version') ?? PackageVersion::get());
     }
 }

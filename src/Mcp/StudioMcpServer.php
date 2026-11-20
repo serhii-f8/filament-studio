@@ -45,7 +45,9 @@ use Flexpik\FilamentStudio\Mcp\Tools\Records\UpdateRecordTool;
 use Flexpik\FilamentStudio\Mcp\Tools\SavedFilters\DeleteSavedFilterTool;
 use Flexpik\FilamentStudio\Mcp\Tools\SavedFilters\ListSavedFiltersTool;
 use Flexpik\FilamentStudio\Mcp\Tools\SavedFilters\SaveFilterTool;
+use Flexpik\FilamentStudio\Support\PackageVersion;
 use Laravel\Mcp\Server;
+use Laravel\Mcp\Server\Contracts\Transport;
 use Laravel\Mcp\Server\Prompt;
 use Laravel\Mcp\Server\Tool;
 
@@ -53,7 +55,7 @@ class StudioMcpServer extends Server
 {
     protected string $name = 'Filament Studio';
 
-    protected string $version = '0.1.0';
+    protected string $version = PackageVersion::FALLBACK;
 
     protected string $instructions = 'Filament Studio is a dynamic data model manager built on Filament v5 with EAV storage. '.
         'Through this MCP server you can manage collections (data models), fields (columns), records (rows), '.
@@ -117,6 +119,13 @@ class StudioMcpServer extends Server
      * @var array<int, class-string<Prompt>>
      */
     protected array $prompts = [];
+
+    public function __construct(Transport $transport)
+    {
+        parent::__construct($transport);
+
+        $this->version = PackageVersion::get();
+    }
 
     public function boot(): void
     {

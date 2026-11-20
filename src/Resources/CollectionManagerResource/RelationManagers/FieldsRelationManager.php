@@ -22,6 +22,7 @@ use Flexpik\FilamentStudio\Models\StudioCollection;
 use Flexpik\FilamentStudio\Models\StudioField;
 use Flexpik\FilamentStudio\Models\StudioMigrationLog;
 use Flexpik\FilamentStudio\Services\ConditionEvaluator;
+use Flexpik\FilamentStudio\Support\SchemaDefaults;
 use Illuminate\Database\Eloquent\Model;
 
 class FieldsRelationManager extends RelationManager
@@ -258,13 +259,25 @@ class FieldsRelationManager extends RelationManager
                         })
                         ->searchable()
                         ->live()
-                        ->afterStateUpdated(function (Set $set, ?string $state) use ($registry) {
-                            if ($state) {
-                                $allTypes = $registry->all();
-                                if (isset($allTypes[$state])) {
-                                    $set('eav_cast', $allTypes[$state]::$eavCast->value);
-                                }
+                        ->afterStateUpdated(function (Set $set, Get $get, ?string $state) use ($registry) {
+                            $allTypes = $registry->all();
+                            $type = $state !== null ? ($allTypes[$state] ?? null) : null;
+
+                            if ($type !== null) {
+                                $set('eav_cast', $type::$eavCast->value);
                             }
+
+                            // Swap in the new type's settings, initialised to their defaults: the
+                            // revealed toggles entangle settings.* paths, and an uninitialised path
+                            // logs "Livewire Entangle Error". Conditions are type-independent.
+                            $settings = $type !== null ? SchemaDefaults::from($type::settingsSchema()) : [];
+                            $conditions = $get('settings.conditions');
+
+                            if ($conditions !== null) {
+                                $settings['conditions'] = $conditions;
+                            }
+
+                            $set('settings', $settings);
                         })
                         ->helperText('Determines the input type, storage format, and available settings.'),
                     Forms\Components\TextInput::make('column_name')

@@ -1,0 +1,22 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\Artisan;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        // Repairs malformed val_json values and JSON-cast text fields left by releases <= v1.9.0.
+        Artisan::call('studio:repair-json-storage');
+
+        // Re-run the idempotent system-field repair: since v1.9.1 it also gives existing
+        // Status fields their "draft" default, and installs already ran its own migration.
+        Artisan::call('studio:repair-system-fields');
+    }
+
+    public function down(): void
+    {
+        // Irreversible data repair — no rollback.
+    }
+};

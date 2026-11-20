@@ -10,7 +10,6 @@ use Flexpik\FilamentStudio\Mcp\Support\StudioApiKeyContext;
 use Flexpik\FilamentStudio\Mcp\Support\StudioScope;
 use Flexpik\FilamentStudio\Mcp\Support\ToolAuthorizes;
 use Flexpik\FilamentStudio\Models\StudioCollection;
-use Illuminate\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
@@ -70,7 +69,7 @@ class ListCollectionsTool extends Tool
                 ],
             ]);
         } catch (\Throwable $e) {
-            return Response::json((new StudioMcpExceptionHandler)->toResponse($e));
+            return (new StudioMcpExceptionHandler)->toMcpResponse($e);
         }
     }
 }

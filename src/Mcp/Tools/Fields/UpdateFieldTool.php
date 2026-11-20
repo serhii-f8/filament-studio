@@ -10,7 +10,6 @@ use Flexpik\FilamentStudio\Mcp\Support\McpSerializer;
 use Flexpik\FilamentStudio\Mcp\Support\StudioApiKeyContext;
 use Flexpik\FilamentStudio\Mcp\Support\StudioScope;
 use Flexpik\FilamentStudio\Mcp\Support\ToolAuthorizes;
-use Illuminate\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
@@ -53,7 +52,7 @@ class UpdateFieldTool extends Tool
 
             return Response::json(['field' => (new McpSerializer)->field($field)]);
         } catch (\Throwable $e) {
-            return Response::json((new StudioMcpExceptionHandler)->toResponse($e));
+            return (new StudioMcpExceptionHandler)->toMcpResponse($e);
         }
     }
 }

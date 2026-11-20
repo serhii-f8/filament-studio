@@ -12,7 +12,6 @@ use Flexpik\FilamentStudio\Mcp\Support\StudioApiKeyContext;
 use Flexpik\FilamentStudio\Mcp\Support\ToolAuthorizes;
 use Flexpik\FilamentStudio\Models\StudioCollection;
 use Flexpik\FilamentStudio\Services\EavQueryBuilder;
-use Illuminate\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
@@ -47,10 +46,11 @@ class CreateRecordTool extends Tool
             $collection = StudioCollection::query()->forTenant($apiKey->tenant_id)->where('slug', $slug)->first();
             $locale = $request->get('locale');
             $data = EavQueryBuilder::for($collection)->locale($locale)->getRecordData($record);
+            $data = array_diff_key($data, array_flip(EavQueryBuilder::secretColumns($collection)));
 
             return Response::json(['record' => (new McpSerializer)->record($record, $data, $locale)]);
         } catch (\Throwable $e) {
-            return Response::json((new StudioMcpExceptionHandler)->toResponse($e));
+            return (new StudioMcpExceptionHandler)->toMcpResponse($e);
         }
     }
 }

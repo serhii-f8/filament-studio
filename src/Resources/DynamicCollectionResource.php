@@ -15,12 +15,14 @@ use Filament\Tables\Table;
 use Flexpik\FilamentStudio\Filtering\FilterGroup;
 use Flexpik\FilamentStudio\Models\StudioCollection;
 use Flexpik\FilamentStudio\Models\StudioRecord;
+use Flexpik\FilamentStudio\Models\StudioValue;
 use Flexpik\FilamentStudio\Resources\DynamicCollectionResource\Pages;
 use Flexpik\FilamentStudio\Services\DynamicFiltersBuilder;
 use Flexpik\FilamentStudio\Services\DynamicFormSchemaBuilder;
 use Flexpik\FilamentStudio\Services\DynamicTableColumnsBuilder;
 use Flexpik\FilamentStudio\Services\EavQueryBuilder;
 use Flexpik\FilamentStudio\Services\LocaleResolver;
+use Flexpik\FilamentStudio\Services\RecordSortOrder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
@@ -176,6 +178,17 @@ class DynamicCollectionResource extends Resource
 
                 return $query;
             })
+            ->defaultSort(
+                fn (Builder $query, string $direction): ?Builder => static::applyCollectionDefaultSort($collection, $query, $direction),
+                $collection->sort_direction?->value ?? 'asc',
+            )
+            ->reorderable(
+                RecordSortOrder::isEnabled($collection) ? RecordSortOrder::COLUMN : null,
+                direction: $collection->sort_field === RecordSortOrder::COLUMN
+                    ? ($collection->sort_direction?->value ?? 'asc')
+                    : 'asc',
+            )
+            ->authorizeReorder(fn (): bool => static::canEdit(null))
             ->columns(DynamicTableColumnsBuilder::build($collection))
             ->filters(DynamicFiltersBuilder::build($collection))
             ->actions([
@@ -191,6 +204,41 @@ class DynamicCollectionResource extends Resource
                         ->visible(fn (): bool => static::canDelete(null)),
                 ]),
             ]);
+    }
+
+    /**
+     * Order the records table by the collection's configured sort field (an EAV field, or the
+     * record's own created_at/updated_at timestamps when no field of that name exists).
+     */
+    protected static function applyCollectionDefaultSort(StudioCollection $collection, Builder $query, string $direction): ?Builder
+    {
+        $sortField = $collection->sort_field;
+
+        if (blank($sortField)) {
+            return null;
+        }
+
+        $field = EavQueryBuilder::getCachedFields($collection)->firstWhere('column_name', $sortField);
+        $recordsTable = $query->getModel()->getTable();
+
+        if ($field) {
+            $valuesTable = (new StudioValue)->getTable();
+
+            return $query->orderBy(
+                StudioValue::query()
+                    ->select($field->eav_cast->column())
+                    ->whereColumn("{$valuesTable}.record_id", "{$recordsTable}.id")
+                    ->where("{$valuesTable}.field_id", $field->id)
+                    ->limit(1),
+                $direction,
+            );
+        }
+
+        if (in_array($sortField, ['created_at', 'updated_at'], true)) {
+            return $query->orderBy("{$recordsTable}.{$sortField}", $direction);
+        }
+
+        return null;
     }
 
     /**

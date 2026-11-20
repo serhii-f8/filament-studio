@@ -42,7 +42,7 @@ class RecordVersioningObserver
         // Skip if the latest version already has an identical snapshot
         $latest = StudioRecordVersion::query()
             ->where('record_id', $record->id)
-            ->orderByDesc('created_at')
+            ->latestFirst()
             ->first();
 
         if ($latest && $latest->snapshot === $snapshot) {

@@ -12,7 +12,6 @@ use Flexpik\FilamentStudio\Mcp\Support\StudioApiKeyContext;
 use Flexpik\FilamentStudio\Mcp\Support\ToolAuthorizes;
 use Flexpik\FilamentStudio\Models\StudioCollection;
 use Flexpik\FilamentStudio\Services\EavQueryBuilder;
-use Illuminate\JsonSchema\JsonSchema;
 use InvalidArgumentException;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -81,15 +80,24 @@ class QueryRecordsTool extends Tool
 
             $paginator = $builder->paginate($perPage, $page);
 
+            $secret = EavQueryBuilder::secretColumns($collection);
+            $items = array_map(function (object $item) use ($secret): object {
+                foreach ($secret as $column) {
+                    unset($item->{$column});
+                }
+
+                return $item;
+            }, $paginator->items());
+
             return Response::json([
-                'data' => $paginator->items(),
+                'data' => $items,
                 'page' => $paginator->currentPage(),
                 'per_page' => $paginator->perPage(),
                 'total' => $paginator->total(),
                 'last_page' => $paginator->lastPage(),
             ]);
         } catch (\Throwable $e) {
-            return Response::json((new StudioMcpExceptionHandler)->toResponse($e));
+            return (new StudioMcpExceptionHandler)->toMcpResponse($e);
         }
     }
 

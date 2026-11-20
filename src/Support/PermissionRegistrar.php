@@ -5,6 +5,7 @@ namespace Flexpik\FilamentStudio\Support;
 use Flexpik\FilamentStudio\Enums\StudioPermission;
 use Flexpik\FilamentStudio\Models\StudioCollection;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class PermissionRegistrar
 {
@@ -139,6 +140,67 @@ class PermissionRegistrar
             app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
         } catch (\Throwable) {
             // Fail silently if database is unavailable.
+        }
+    }
+
+    /**
+     * Give the roles that administer Studio every record permission for a collection, so a
+     * collection created from anywhere (wizard, MCP, seeders, plain code) is usable by admins.
+     *
+     * Target roles are the union of:
+     *  - every role named in `filament-studio.permissions.auto_grant_roles` that already exists
+     *    (roles are never created here), and
+     *  - every role holding `studio.manageFields`, unless
+     *    `filament-studio.permissions.auto_grant_to_field_managers` is false.
+     *
+     * Each role only receives the permissions matching its own guard. No-op if
+     * spatie/laravel-permission is not installed.
+     */
+    public static function grantCollectionToAdminRoles(StudioCollection $collection, ?string $guardName = null): void
+    {
+        if (! static::spatieIsInstalled()) {
+            return;
+        }
+
+        try {
+            $permissionClass = config('permission.models.permission', Permission::class);
+            $roleClass = config('permission.models.role', Role::class);
+
+            $permissions = $permissionClass::query()
+                ->whereIn('name', StudioPermission::forCollection($collection->slug))
+                ->when($guardName !== null, fn ($query) => $query->where('guard_name', $guardName))
+                ->get();
+
+            if ($permissions->isEmpty()) {
+                return;
+            }
+
+            $roleNames = array_values(array_filter((array) config('filament-studio.permissions.auto_grant_roles', [])));
+
+            $roles = $roleNames === []
+                ? collect()
+                : $roleClass::query()->whereIn('name', $roleNames)->get();
+
+            if (config('filament-studio.permissions.auto_grant_to_field_managers', true)) {
+                $roles = $roles->merge(
+                    $roleClass::query()
+                        ->whereHas('permissions', fn ($query) => $query->where('name', StudioPermission::ManageFields->value))
+                        ->get()
+                );
+            }
+
+            foreach ($roles->unique(fn ($role) => $role->getKey()) as $role) {
+                $matching = $permissions->where('guard_name', $role->guard_name);
+
+                if ($matching->isNotEmpty()) {
+                    $role->givePermissionTo($matching->all());
+                }
+            }
+
+            app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+        } catch (\Throwable $e) {
+            // Never fail a collection write over the convenience grant.
+            report($e);
         }
     }
 

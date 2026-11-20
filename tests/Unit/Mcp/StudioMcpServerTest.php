@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use Composer\InstalledVersions;
 use Flexpik\FilamentStudio\Mcp\StudioMcpServer;
+use Flexpik\FilamentStudio\Support\PackageVersion;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Contracts\Transport;
 
@@ -37,6 +39,22 @@ it('declares server identity via properties', function () {
     $instructions->setAccessible(true);
 
     expect($name->getValue($server))->toBe('Filament Studio');
-    expect($version->getValue($server))->toBe('0.1.0');
+    expect($version->getValue($server))->not->toBe('0.1.0');
     expect($instructions->getValue($server))->toContain('dynamic data model manager');
+});
+
+it('reports the installed package version', function () {
+    $transport = Mockery::mock(Transport::class);
+    $server = new StudioMcpServer($transport);
+
+    $expected = InstalledVersions::getPrettyVersion('serhii-f8/filament-studio');
+
+    expect($expected)->toBeString()
+        ->and($server->createContext()->implementation->version)->toBe($expected)
+        ->and(PackageVersion::get())->toBe($expected);
+});
+
+it('falls back to a dev version when the package is not registered with Composer', function () {
+    expect(PackageVersion::get('vendor/not-installed-package'))
+        ->toBe(PackageVersion::FALLBACK);
 });

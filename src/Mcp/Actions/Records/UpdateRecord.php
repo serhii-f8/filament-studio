@@ -8,6 +8,7 @@ use Flexpik\FilamentStudio\Mcp\Exceptions\StudioNotFoundException;
 use Flexpik\FilamentStudio\Models\StudioCollection;
 use Flexpik\FilamentStudio\Models\StudioRecord;
 use Flexpik\FilamentStudio\Services\EavQueryBuilder;
+use Flexpik\FilamentStudio\Services\RecordInputRules;
 use Illuminate\Support\Facades\Validator;
 
 class UpdateRecord
@@ -43,7 +44,7 @@ class UpdateRecord
         }
 
         $fields = EavQueryBuilder::getCachedFields($collection);
-        $rules = (new CreateRecord)->rulesFor($fields, mode: 'update');
+        $rules = RecordInputRules::for($collection, $fields, 'update', $record->id);
         Validator::validate($input, $rules);
 
         EavQueryBuilder::for($collection)

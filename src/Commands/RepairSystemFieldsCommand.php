@@ -30,6 +30,7 @@ class RepairSystemFieldsCommand extends Command
     {
         $options = $this->repairLegacyOptions();
         $values = $this->backfillAutoFillValues();
+        $this->defaultStatusToDraft();
 
         $this->info("Repaired {$options} field(s) with missing options and back-filled {$values} value(s).");
 
@@ -75,6 +76,23 @@ class RepairSystemFieldsCommand extends Command
             });
 
         return $repaired;
+    }
+
+    /**
+     * Status fields created up to v1.9.0 were required but had no default. Only fills an
+     * empty default, and only when "draft" is one of the field's options.
+     */
+    protected function defaultStatusToDraft(): void
+    {
+        StudioField::query()
+            ->where('is_system', true)
+            ->where('column_name', 'status')
+            ->where(fn ($q) => $q->whereNull('default_value')->orWhere('default_value', ''))
+            ->whereExists(fn ($q) => $q->selectRaw('1')
+                ->from((new StudioFieldOption)->getTable().' as o')
+                ->whereColumn('o.field_id', (new StudioField)->getTable().'.id')
+                ->where('o.value', 'draft'))
+            ->update(['default_value' => 'draft']);
     }
 
     protected function backfillAutoFillValues(): int

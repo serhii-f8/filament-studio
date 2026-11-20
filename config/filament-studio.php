@@ -34,11 +34,21 @@ return [
     | Configure how Studio registers permissions with spatie/laravel-permission.
     | Set 'auto_register' to false to prevent automatic permission seeding.
     | Set 'guard' to specify which auth guard the permissions belong to.
+    | 'auto_grant_roles' / 'auto_grant_to_field_managers' control which roles
+    | automatically receive record access to newly created collections.
     |
     */
     'permissions' => [
         'auto_register' => env('STUDIO_PERMISSIONS_AUTO_REGISTER', true),
         'guard' => env('STUDIO_PERMISSIONS_GUARD'),
+
+        // When a collection is created (wizard, MCP, seeder or plain code) its per-collection
+        // record permissions are granted to these existing roles, e.g. ['super_admin', 'admin'].
+        // Roles are never created; names that do not exist are ignored.
+        'auto_grant_roles' => array_values(array_filter(array_map('trim', explode(',', (string) env('STUDIO_PERMISSIONS_AUTO_GRANT_ROLES', ''))))),
+
+        // Also grant new collections to every role that holds `studio.manageFields`.
+        'auto_grant_to_field_managers' => env('STUDIO_PERMISSIONS_AUTO_GRANT_TO_FIELD_MANAGERS', true),
     ],
 
     /*

@@ -5,6 +5,7 @@ namespace Flexpik\FilamentStudio\Panels;
 use Filament\Schemas\Components\Component;
 use Flexpik\FilamentStudio\Enums\PanelPlacement;
 use Flexpik\FilamentStudio\Models\StudioPanel;
+use Flexpik\FilamentStudio\Support\SchemaDefaults;
 
 abstract class AbstractStudioPanel
 {
@@ -51,6 +52,18 @@ abstract class AbstractStudioPanel
     public static function defaultConfig(): array
     {
         return [];
+    }
+
+    /**
+     * The config state to seed the editor with when this type is picked: every configSchema()
+     * field initialised to its declared default (so toggles have a path to entangle with),
+     * with defaultConfig() values taking precedence.
+     *
+     * @return array<string, mixed>
+     */
+    public static function initialConfig(): array
+    {
+        return array_replace(SchemaDefaults::from(static::configSchema()), static::defaultConfig());
     }
 
     /**

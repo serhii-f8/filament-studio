@@ -10,7 +10,6 @@ use Flexpik\FilamentStudio\Mcp\Support\McpSerializer;
 use Flexpik\FilamentStudio\Mcp\Support\StudioApiKeyContext;
 use Flexpik\FilamentStudio\Mcp\Support\StudioScope;
 use Flexpik\FilamentStudio\Mcp\Support\ToolAuthorizes;
-use Illuminate\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
@@ -45,7 +44,7 @@ class CreateApiKeyTool extends Tool
                 'warning' => 'Store this secret immediately. It cannot be retrieved again.',
             ]);
         } catch (\Throwable $e) {
-            return Response::json((new StudioMcpExceptionHandler)->toResponse($e));
+            return (new StudioMcpExceptionHandler)->toMcpResponse($e);
         }
     }
 }

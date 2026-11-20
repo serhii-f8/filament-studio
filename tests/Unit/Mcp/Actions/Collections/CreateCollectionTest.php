@@ -46,3 +46,38 @@ it('creates inline fields in one shot', function () {
     expect($c->fields)->toHaveCount(2)
         ->and($c->fields->pluck('column_name')->all())->toBe(['sku', 'price']);
 });
+
+it('rejects a duplicate name within the same tenant as a name conflict', function () {
+    StudioCollection::factory()->create(['name' => 'Products', 'slug' => 'products', 'tenant_id' => 1]);
+
+    try {
+        ($this->action)(['name' => 'Products', 'slug' => 'goods'], tenantId: 1);
+        $this->fail('Expected IntegrityException');
+    } catch (IntegrityException $e) {
+        expect($e->field)->toBe('name');
+    }
+});
+
+it('rejects a duplicate slug among tenant-less collections', function () {
+    // NULL tenant_id never collides in the (tenant_id, slug) unique index, so the action must check.
+    StudioCollection::factory()->create(['name' => 'Products', 'slug' => 'products', 'tenant_id' => null]);
+
+    expect(fn () => ($this->action)(['name' => 'Other', 'slug' => 'products'], tenantId: null))
+        ->toThrow(IntegrityException::class);
+});
+
+it('allows the same name and slug in a different tenant', function () {
+    StudioCollection::factory()->create(['name' => 'Products', 'slug' => 'products', 'tenant_id' => 2]);
+
+    $c = ($this->action)(['name' => 'Products'], tenantId: 1);
+
+    expect($c->slug)->toBe('products')->and($c->tenant_id)->toBe(1);
+});
+
+it('allows a tenant-less collection whose name exists only in a tenant', function () {
+    StudioCollection::factory()->create(['name' => 'Products', 'slug' => 'products', 'tenant_id' => 2]);
+
+    $c = ($this->action)(['name' => 'Products'], tenantId: null);
+
+    expect($c->tenant_id)->toBeNull();
+});

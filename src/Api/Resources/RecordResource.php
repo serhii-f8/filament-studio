@@ -24,6 +24,29 @@ class RecordResource extends JsonResource
     }
 
     /**
+     * Keys that are always present at the top level of an API record.
+     */
+    public const RECORD_META_KEYS = ['uuid', 'created_by', 'updated_by', 'created_at', 'updated_at'];
+
+    /**
+     * Prepare a record's field values for an API response: never expose password
+     * hashes, and drop system fields that duplicate the record's top-level metadata.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public static function presentData(StudioCollection $collection, array $data): array
+    {
+        $hidden = EavQueryBuilder::getCachedFields($collection)
+            ->filter(fn ($field) => $field->is_system && in_array($field->column_name, self::RECORD_META_KEYS, true))
+            ->pluck('column_name')
+            ->merge(EavQueryBuilder::secretColumns($collection))
+            ->all();
+
+        return array_diff_key($data, array_flip($hidden));
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
@@ -35,6 +58,8 @@ class RecordResource extends JsonResource
         $data = EavQueryBuilder::for($collection)
             ->locale($locale)
             ->getRecordData($this->resource);
+
+        $data = static::presentData($collection, $data);
 
         return [
             'uuid' => $this->uuid,

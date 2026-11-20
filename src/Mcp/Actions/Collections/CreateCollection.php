@@ -8,6 +8,7 @@ use Flexpik\FilamentStudio\FieldTypes\FieldTypeRegistry;
 use Flexpik\FilamentStudio\Mcp\Exceptions\IntegrityException;
 use Flexpik\FilamentStudio\Models\StudioCollection;
 use Flexpik\FilamentStudio\Models\StudioField;
+use Flexpik\FilamentStudio\Support\PermissionRegistrar;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -44,7 +45,15 @@ class CreateCollection
 
         $slug = $data['slug'] ?? Str::slug($data['name']);
 
-        return DB::transaction(function () use ($data, $slug, $tenantId) {
+        // Names and slugs are unique per tenant. Check explicitly: the (tenant_id, …) unique
+        // indexes never fire for tenant-less collections because NULLs don't collide.
+        foreach (['name' => $data['name'], 'slug' => $slug] as $column => $value) {
+            if ($this->existsInTenant($column, $value, $tenantId)) {
+                throw IntegrityException::duplicate($column, $value);
+            }
+        }
+
+        $collection = DB::transaction(function () use ($data, $slug, $tenantId) {
             try {
                 $label = $data['label'] ?? $data['name'];
 
@@ -92,5 +101,19 @@ class CreateCollection
 
             return $collection->load('fields');
         });
+
+        // Mirror the UI wizard: whoever creates a collection can immediately work with its
+        // records. MCP calls authenticated only by API key have no user, so this is a no-op.
+        PermissionRegistrar::grantCollectionTo(auth()->user(), $collection);
+
+        return $collection;
+    }
+
+    private function existsInTenant(string $column, string $value, ?int $tenantId): bool
+    {
+        return StudioCollection::query()
+            ->where($column, $value)
+            ->when($tenantId === null, fn ($query) => $query->whereNull('tenant_id'), fn ($query) => $query->where('tenant_id', $tenantId))
+            ->exists();
     }
 }

@@ -93,9 +93,10 @@ it('creates a record with a generated UUID', function () {
     expect($record->uuid)->toMatch('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/');
 });
 
-it('creates a record without tenant when tenant is null', function () {
-    $record = EavQueryBuilder::for($this->collection)
-        ->create(['name' => 'No Tenant']);
+it('creates a record without tenant for a collection without tenant', function () {
+    $collection = StudioCollection::factory()->create(['tenant_id' => null]);
+
+    $record = EavQueryBuilder::for($collection)->create([]);
 
     expect($record->tenant_id)->toBeNull();
 });
@@ -253,4 +254,12 @@ it('wraps create in a database transaction', function () {
     foreach ($newRecords as $record) {
         expect(StudioValue::where('record_id', $record->id)->count())->toBeGreaterThan(0);
     }
+});
+
+it('gives a new record its collection\'s tenant when no tenant was set on the builder', function () {
+    $collection = StudioCollection::factory()->create(['tenant_id' => 7]);
+
+    $record = EavQueryBuilder::for($collection)->create([]);
+
+    expect($record->tenant_id)->toBe(7);
 });
