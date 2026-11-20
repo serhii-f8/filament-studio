@@ -2,6 +2,7 @@
 
 namespace Flexpik\FilamentStudio\FieldTypes;
 
+use Filament\Facades\Filament;
 use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Filters\BaseFilter;
@@ -177,10 +178,12 @@ abstract class AbstractFieldType
         if ($this->field->is_unique && method_exists($component, 'rule')) {
             $field = $this->field;
 
+            // Compare within the tenant the record is (or will be) saved under: an existing
+            // record keeps its own, a new one gets the panel tenant, else the collection's.
             $component->rule(fn (?Model $record): EavUniqueRule => new EavUniqueRule(
                 $field,
                 $field->collection,
-                $field->collection->tenant_id,
+                $record?->getAttribute('tenant_id') ?? Filament::getTenant()?->getKey() ?? $field->collection->tenant_id,
                 $record?->getKey(),
             ));
         }

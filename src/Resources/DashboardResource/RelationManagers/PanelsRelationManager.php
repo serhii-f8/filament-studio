@@ -19,6 +19,7 @@ use Filament\Tables\Table;
 use Flexpik\FilamentStudio\Enums\PanelPlacement;
 use Flexpik\FilamentStudio\Models\StudioPanel;
 use Flexpik\FilamentStudio\Panels\PanelTypeRegistry;
+use Livewire\Attributes\On;
 
 class PanelsRelationManager extends RelationManager
 {
@@ -89,6 +90,15 @@ class PanelsRelationManager extends RelationManager
                     ->default(4),
             ]),
         ]);
+    }
+
+    /**
+     * Panels added from the page header ("Add Panel") are created outside this table.
+     */
+    #[On('studio-panels-updated')]
+    public function refreshPanels(): void
+    {
+        $this->resetTable();
     }
 
     public function table(Table $table): Table

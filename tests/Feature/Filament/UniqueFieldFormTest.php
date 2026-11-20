@@ -65,3 +65,15 @@ it('only compares against records of the same tenant', function () {
         ->call('create')
         ->assertHasNoFormErrors();
 });
+
+it('compares within the record\'s own tenant in a shared collection', function () {
+    // A collection without a tenant can hold records of several tenants.
+    $taken = EavQueryBuilder::for($this->collection)->tenant(7)->create(['title' => 'Taken']);
+    $mine = EavQueryBuilder::for($this->collection)->tenant(7)->create(['title' => 'Mine']);
+    EavQueryBuilder::for($this->collection)->tenant(8)->create(['title' => 'Other tenant']);
+
+    $page = Livewire::test(EditCollectionRecord::class, ['collectionSlug' => 'tasks', 'record' => $mine->uuid]);
+
+    $page->fillForm(['title' => 'Taken'])->call('save')->assertHasFormErrors(['title']);
+    $page->fillForm(['title' => 'Other tenant'])->call('save')->assertHasNoFormErrors();
+});

@@ -12,6 +12,7 @@ use Flexpik\FilamentStudio\Models\StudioRecordVersion;
 use Flexpik\FilamentStudio\Resources\DynamicCollectionResource;
 use Flexpik\FilamentStudio\Resources\DynamicCollectionResource\Concerns\HasPanelWidgets;
 use Flexpik\FilamentStudio\Resources\DynamicCollectionResource\Concerns\ResolvesCollection;
+use Flexpik\FilamentStudio\Resources\DynamicCollectionResource\Concerns\RestoresVersions;
 use Flexpik\FilamentStudio\Services\EavQueryBuilder;
 use Flexpik\FilamentStudio\Services\LocaleResolver;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +21,7 @@ class ViewCollectionRecord extends ViewRecord
 {
     use HasPanelWidgets;
     use ResolvesCollection;
+    use RestoresVersions;
 
     protected static string $resource = DynamicCollectionResource::class;
 
@@ -106,6 +108,8 @@ class ViewCollectionRecord extends ViewRecord
                 ->label('Version History')
                 ->icon('heroicon-o-clock')
                 ->slideOver()
+                // The Restore buttons inside the slide-over mount this as a child action.
+                ->registerModalActions([$this->restoreVersionAction()])
                 ->modalContent(function () {
                     /** @var StudioRecord $record */
                     $record = $this->getRecord();
@@ -138,25 +142,6 @@ class ViewCollectionRecord extends ViewRecord
                         'showRestore' => true,
                     ]);
                 });
-
-            $actions[] = Actions\Action::make('restoreVersion')
-                ->label('Restore')
-                ->icon('heroicon-o-arrow-uturn-left')
-                ->requiresConfirmation()
-                ->modalHeading('Restore this version?')
-                ->modalDescription('This will overwrite the current record values with the selected version snapshot. The current state will be saved as a new version before restoring.')
-                ->action(function (array $arguments) {
-                    /** @var StudioRecord $record */
-                    $record = $this->getRecord();
-                    $collection = $this->getResolvedCollection();
-
-                    EavQueryBuilder::for($collection)
-                        ->tenant($record->tenant_id)
-                        ->restoreFromVersion($record->uuid, $arguments['versionId']);
-
-                    $this->redirect($this->getUrl());
-                })
-                ->hidden();
         }
 
         return $actions;

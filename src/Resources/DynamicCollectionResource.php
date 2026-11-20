@@ -24,6 +24,7 @@ use Flexpik\FilamentStudio\Services\EavQueryBuilder;
 use Flexpik\FilamentStudio\Services\LocaleResolver;
 use Flexpik\FilamentStudio\Services\RecordSortOrder;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 
 class DynamicCollectionResource extends Resource
@@ -196,14 +197,28 @@ class DynamicCollectionResource extends Resource
                 EditAction::make()
                     ->visible(fn (): bool => static::canEdit(null)),
                 DeleteAction::make()
+                    ->using(fn (StudioRecord $record) => static::deleteRecord($collection, $record))
                     ->visible(fn (): bool => static::canDelete(null)),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
+                        ->using(fn (EloquentCollection $records) => $records->each(fn (StudioRecord $record) => static::deleteRecord($collection, $record)))
                         ->visible(fn (): bool => static::canDelete(null)),
                 ]),
             ]);
+    }
+
+    /**
+     * Delete the way the collection is configured: soft delete when enabled, otherwise remove the
+     * record and its values. (The model always has SoftDeletes, so Filament's default would
+     * soft delete even collections that have it turned off.)
+     */
+    public static function deleteRecord(StudioCollection $collection, StudioRecord $record): bool
+    {
+        EavQueryBuilder::for($collection)->delete($record->id);
+
+        return true;
     }
 
     /**

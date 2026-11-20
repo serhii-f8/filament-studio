@@ -21,6 +21,17 @@ class CreateCollectionRecord extends CreateRecord
         $this->initializeCollectionSlug();
         DynamicCollectionResource::$currentPageContext = 'create';
 
+        $collection = $this->getResolvedCollection();
+        if ($collection->is_singleton) {
+            $existing = $collection->singletonRecord(Filament::getTenant()?->getKey() ?? $collection->tenant_id);
+
+            if ($existing !== null) {
+                $this->redirect(DynamicCollectionResource::getUrl('edit', ['collection_slug' => $this->collectionSlug, 'record' => $existing]));
+
+                return;
+            }
+        }
+
         parent::mount();
     }
 

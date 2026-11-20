@@ -33,6 +33,14 @@ class RecordInputRules
     {
         $rules = [];
 
+        if ($mode === 'store' && $collection->is_singleton) {
+            $rules['data'] = [function (string $attribute, mixed $value, \Closure $fail) use ($collection): void {
+                if ($collection->singletonRecord($collection->tenant_id) !== null) {
+                    $fail("The {$collection->label} collection holds a single record; update the existing one instead.");
+                }
+            }];
+        }
+
         foreach ($fields as $field) {
             if ($field->is_system) {
                 continue;

@@ -4,6 +4,9 @@ namespace Flexpik\FilamentStudio;
 
 use Dedoc\Scramble\Scramble;
 use Filament\Facades\Filament;
+use Filament\Support\Assets\Css;
+use Filament\Support\Assets\Js;
+use Filament\Support\Facades\FilamentAsset;
 use Flexpik\FilamentStudio\Api\Flows\StudioFlowsApiRouteRegistrar;
 use Flexpik\FilamentStudio\Api\OpenApi\StudioDocumentTransformer;
 use Flexpik\FilamentStudio\Api\OpenApi\StudioOperationTransformer;
@@ -234,6 +237,12 @@ class FilamentStudioServiceProvider extends PackageServiceProvider
     public function packageBooted(): void
     {
         $this->loadStubMigrations();
+
+        // The flow designer canvas ships prebuilt; loaded only by the design page.
+        FilamentAsset::register([
+            Js::make('studio-flow-canvas', __DIR__.'/../resources/dist/flow-canvas.js')->loadedOnRequest()->module(),
+            Css::make('studio-flow-canvas', __DIR__.'/../resources/dist/flow-canvas.css')->loadedOnRequest(),
+        ], 'serhii-f8/filament-studio');
 
         \Livewire\Livewire::component('filter-builder', Livewire\FilterBuilder::class);
         \Livewire\Livewire::component('studio-locale-switcher', Livewire\LocaleSwitcher::class);

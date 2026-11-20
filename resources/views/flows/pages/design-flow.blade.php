@@ -1,7 +1,9 @@
 <x-filament-panels::page>
     @push('styles')
         <meta name="studio-api-key" content="{{ $this->canvasApiKey }}">
-        @vite(['resources/css/app.css', 'packages/flexpik/filament-studio/resources/js/flows/flow-canvas.tsx'])
+        {{-- Prebuilt with the package (resources/dist) and published by `php artisan filament:assets`. --}}
+        <link rel="stylesheet" href="{{ \Filament\Support\Facades\FilamentAsset::getStyleHref('studio-flow-canvas', 'serhii-f8/filament-studio') }}">
+        <script type="module" src="{{ \Filament\Support\Facades\FilamentAsset::getScriptSrc('studio-flow-canvas', 'serhii-f8/filament-studio') }}"></script>
     @endpush
 
     <div

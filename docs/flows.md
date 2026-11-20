@@ -26,6 +26,14 @@ STUDIO_FLOWS_ENABLED=true
 Enabling it registers the **Flows** resource in the admin panel, the Flows REST API, and the
 `studio:flows:dispatch-scheduled` command used by Schedule triggers.
 
+The canvas ships prebuilt with the package — no Node or Vite setup in your app. It is published
+with Filament's other assets; Filament's `filament:upgrade` Composer hook does this, or run it
+yourself after updating:
+
+```bash
+php artisan filament:assets
+```
+
 ## Draft, Design, Publish
 
 Every flow has a **draft** graph (edited live on the canvas) and, once published, an immutable

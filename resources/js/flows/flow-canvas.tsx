@@ -133,8 +133,12 @@ function CanvasInner({ api, flowName, meta }: { api: FlowApi; flowName: string; 
                     catch (err) { console.error('[save] failed:', err); }
                     finally { setSaving(false); }
                 }}
-                onPublish={async () => {
-                    try { await api.publish('canvas publish'); }
+                onPublish={async (changeSummary: string) => {
+                    try {
+                        // Publishing snapshots the server-side draft, so unsaved edits go first.
+                        if (dirty) { await api.saveGraph({ nodes, edges }); markClean(); }
+                        await api.publish(changeSummary.trim() || undefined);
+                    }
                     catch (err) { console.error('[publish] failed:', err); }
                 }}
                 onTestRun={() => setShowTestRun(true)}

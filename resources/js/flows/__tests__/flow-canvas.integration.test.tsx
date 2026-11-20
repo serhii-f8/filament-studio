@@ -71,3 +71,46 @@ describe('createNode', () => {
         expect(n.selected).toBe(true);
     });
 });
+
+describe('publishing from the canvas', () => {
+    function mockApi() {
+        const calls: string[] = [];
+        const api = {
+            loadGraph: vi.fn().mockResolvedValue({ draft_graph: { nodes: [{ id: 'trigger', type: 'trigger', position: { x: 0, y: 0 }, data: { triggerType: 'manual' } }], edges: [] }, draft_updated_at: null, published_version: null }),
+            saveGraph: vi.fn().mockImplementation(async () => { calls.push('save'); }),
+            publish: vi.fn().mockImplementation(async () => { calls.push('publish'); }),
+            loadMeta: vi.fn().mockResolvedValue({ triggers: [], operations: [], collections: [] }),
+            testRun: vi.fn(),
+            pollRun: vi.fn(),
+        };
+        vi.spyOn(apiMod, 'createFlowApi').mockReturnValue(api as any);
+        return { api, calls };
+    }
+
+    beforeEach(() => {
+        useFlowStore.setState({ nodes: [], edges: [], selectedNodeId: null, dirty: false });
+    });
+
+    it('sends the change summary typed in the publish dialog', async () => {
+        const { api } = mockApi();
+        const { getByText, getByPlaceholderText, getByRole } = render(<FlowCanvasApp flowId="f" apiBase="/api/studio" apiKey="" flowName="X" />);
+
+        fireEvent.click(getByText('Publish'));
+        fireEvent.change(getByPlaceholderText('Change summary (optional)'), { target: { value: 'Add retry step' } });
+        fireEvent.click(getByRole('dialog').querySelector('button:last-child')!);
+
+        await waitFor(() => expect(api.publish).toHaveBeenCalledWith('Add retry step'));
+    });
+
+    it('saves unsaved changes before publishing them', async () => {
+        const { calls } = mockApi();
+        const { getByText, getByRole } = render(<FlowCanvasApp flowId="f" apiBase="/api/studio" apiKey="" flowName="X" />);
+        await waitFor(() => expect(useFlowStore.getState().nodes.length).toBe(1));
+
+        useFlowStore.setState({ dirty: true });
+        fireEvent.click(getByText('Publish'));
+        fireEvent.click(getByRole('dialog').querySelector('button:last-child')!);
+
+        await waitFor(() => expect(calls).toEqual(['save', 'publish']));
+    });
+});

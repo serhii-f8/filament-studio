@@ -12,6 +12,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Flexpik\FilamentStudio\Enums\PanelPlacement;
 use Flexpik\FilamentStudio\Models\StudioPanel;
 use Flexpik\FilamentStudio\Panels\PanelTypeRegistry;
+use Livewire\Component;
 
 class CreatePanelAction extends Action
 {
@@ -129,7 +130,8 @@ class CreatePanelAction extends Action
                         ->visible(fn () => ! $this->placement->usesGrid()),
                 ];
             })
-            ->action(function (array $data) {
+            ->successNotificationTitle('Panel added')
+            ->action(function (array $data, Component $livewire) {
                 $panelData = [
                     'tenant_id' => Filament::getTenant()?->getKey(),
                     'dashboard_id' => $this->dashboardId,
@@ -149,6 +151,9 @@ class CreatePanelAction extends Action
                 ];
 
                 StudioPanel::create($panelData);
+
+                // The panels table on the same page is a separate Livewire component.
+                $livewire->dispatch('studio-panels-updated');
 
                 $this->success();
             });

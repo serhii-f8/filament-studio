@@ -88,6 +88,14 @@ class StudioCollection extends Model
         return $this->hasMany(StudioRecord::class, 'collection_id');
     }
 
+    /**
+     * The one live record of a singleton collection for a tenant (null tenant = untenanted).
+     */
+    public function singletonRecord(?int $tenantId): ?StudioRecord
+    {
+        return $this->records()->where('tenant_id', $tenantId)->orderBy('id')->first();
+    }
+
     public function migrationLogs(): HasMany
     {
         return $this->hasMany(StudioMigrationLog::class, 'collection_id');

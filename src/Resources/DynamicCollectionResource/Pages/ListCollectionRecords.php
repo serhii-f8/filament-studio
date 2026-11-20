@@ -35,6 +35,18 @@ class ListCollectionRecords extends ListRecords
     {
         $this->initializeCollectionSlug();
 
+        // A singleton has no list: go straight to its record, or to the form that creates it.
+        $collection = $this->getResolvedCollection();
+        if ($collection->is_singleton) {
+            $record = $collection->singletonRecord(Filament::getTenant()?->getKey() ?? $collection->tenant_id);
+
+            $this->redirect($record
+                ? DynamicCollectionResource::getUrl('edit', ['collection_slug' => $this->collectionSlug, 'record' => $record])
+                : DynamicCollectionResource::getUrl('create', ['collection_slug' => $this->collectionSlug]));
+
+            return;
+        }
+
         parent::mount();
     }
 

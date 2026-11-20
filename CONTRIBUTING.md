@@ -54,7 +54,16 @@ vendor/bin/pest
 vendor/bin/pint
 ```
 
-4. **Write meaningful commit messages** that explain *why* a change was made, not just what changed.
+4. **Flow canvas (React) changes** live in `resources/js/flows/`. The package ships the built
+   bundle in `resources/dist/`, so rebuild and commit it with your change (CI fails if it is stale):
+
+```bash
+npm ci
+npm test
+npm run build
+```
+
+5. **Write meaningful commit messages** that explain *why* a change was made, not just what changed.
 
 ### Pull Request Guidelines
 

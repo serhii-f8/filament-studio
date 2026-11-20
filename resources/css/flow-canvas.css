@@ -1,0 +1,12 @@
+/*
+ * Styles for the flow designer canvas. Only Tailwind's theme and utilities — no preflight,
+ * so the Filament panel's own base styles are left alone. Dark mode follows Filament's
+ * `.dark` class rather than the OS preference.
+ */
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@source '../js/flows';
+@source '../views/flows';

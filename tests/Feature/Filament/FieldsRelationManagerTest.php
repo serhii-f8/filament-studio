@@ -334,3 +334,22 @@ it('fills settings a field never stored with the type defaults instead of switch
     expect($field->refresh()->settings)
         ->toMatchArray(['related_collection' => 'authors', 'searchable' => true, 'preload' => true]);
 });
+
+it('makes new fields filterable by default and lets the editor turn it off', function () {
+    $component = Livewire::test(FieldsRelationManager::class, [
+        'ownerRecord' => $this->collection,
+        'pageClass' => EditCollection::class,
+    ]);
+
+    $component->mountTableAction('create')
+        ->assertTableActionDataSet(['is_filterable' => true])
+        ->setTableActionData(['field_type' => 'text', 'column_name' => 'city', 'label' => 'City', 'width' => 'full'])
+        ->callMountedTableAction()
+        ->assertHasNoTableActionErrors();
+
+    $field = StudioField::where('collection_id', $this->collection->id)->where('column_name', 'city')->first();
+    expect($field->is_filterable)->toBeTrue();
+
+    $component->callTableAction('edit', $field, data: ['is_filterable' => false])->assertHasNoTableActionErrors();
+    expect($field->fresh()->is_filterable)->toBeFalse();
+});

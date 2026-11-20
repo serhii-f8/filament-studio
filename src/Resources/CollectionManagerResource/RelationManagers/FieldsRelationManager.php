@@ -305,6 +305,10 @@ class FieldsRelationManager extends RelationManager
                     Forms\Components\Toggle::make('is_unique')
                         ->label('Unique')
                         ->helperText('No two records can have the same value for this field.'),
+                    Forms\Components\Toggle::make('is_filterable')
+                        ->label('Filterable')
+                        ->default(true)
+                        ->helperText('Offer this field in the table filters and the Advanced Filter.'),
                     Forms\Components\Toggle::make('is_indexed')
                         ->label('Indexed')
                         ->helperText('Improves search and filter performance for this field.'),

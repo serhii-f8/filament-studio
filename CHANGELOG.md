@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **Passwords written through the REST API, MCP, Flows or code were stored in plain text** and
+  returned in responses. They are now hashed in the storage layer (values the form already hashed
+  are kept), and password fields are left out of API and MCP responses.
+
+### Fixed
+
+- **The "Unique" field setting did nothing.** It is enforced in the form, the REST API and MCP,
+  within the record's tenant; a record may keep its own value.
+- **Invalid select values were accepted through the REST API and MCP.** Select, radio,
+  multi-select and checkbox-list values must be defined options (unless the field allows creating
+  options or takes them from another collection).
+- **Version history showed changes backwards** — same-second snapshots are now ordered by id —
+  and **the Restore button did nothing** (it pointed at a hidden action Filament refuses to mount).
+  Restoring also records the restored state as the latest version.
+- **Collection lists could crash with "malformed JSON".** Plain strings are now JSON-encoded before
+  they reach `val_json`; `studio:repair-json-storage` (run by a migration) moves rich editor,
+  markdown, file, image and avatar fields created before v1.0.3 to text storage and re-encodes
+  malformed values.
+- **Collections created through MCP or code were 403 for everyone.** Their record permissions are
+  granted to roles holding `studio.manageFields` and to `permissions.auto_grant_roles`.
+- **Collection names were unique across all tenants**; name and slug are now checked per tenant.
+- **The Sort Order option was not implemented.** New records get the next position, the records
+  table is drag-and-drop reorderable, and the collection's default sort is applied.
+- **The Singleton option was not implemented.** A singleton opens its one record (or the form that
+  creates it), and the REST API and MCP refuse a second record.
+- **Fields could not be made filterable from the panel**, so table filters and the Advanced Filter
+  were empty for panel-built collections. The field editor has a Filterable toggle, on by default.
+- **Deleting a record ignored the collection's soft-delete setting** and always soft deleted.
+- **The flow designer only worked in an app that built the package's canvas source with its own
+  Vite setup.** The canvas now ships prebuilt (`resources/dist`) as a Filament asset. Publishing
+  from the canvas also sends the typed change summary and saves pending edits first.
+- **"Add Panel" gave no feedback**: no notification, and the panels table did not refresh.
+- Field defaults (`default_value`) are applied; the Status field defaults to "draft".
+- MCP errors are returned with `isError: true`; MCP reports the real package version.
+- The flow run viewer and variable widget no longer depend on host Tailwind classes.
+- Changing a type in the field editor or the add-panel modals no longer logs Livewire entangle
+  errors.
+- REST API: an invalid `per_page` falls back to the default instead of a 500; update responses
+  return the fresh `updated_at`; pages are ordered by `created_at` then id; system timestamp fields
+  are no longer repeated inside `data`; records created through the API or MCP get their
+  collection's tenant.
+
 ## [1.9.0] - 2026-11-18
 
 ### Fixed

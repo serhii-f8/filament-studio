@@ -160,6 +160,8 @@ All major models scope by `tenant_id`. Queries auto-filter to the current tenant
 
 **Webhook security** (`src/Flows/Security/`): `HmacWebhookVerifier` validates signatures with a timestamp window (`flows.webhook_timestamp_window_seconds`) and IP allowlist; `RotateWebhookSecret` rotates secrets. Public webhooks are rate-limited (`flows.webhook_rate_limit_per_minute`).
 
+**Canvas build**: the designer is a React app in `resources/js/flows/`, built by the package's own Vite config (`npm ci && npm test && npm run build`) into `resources/dist/flow-canvas.{js,css}`, which is committed and registered as a Filament asset (`studio-flow-canvas`). Rebuild and commit `resources/dist` after any canvas change — CI checks it is current.
+
 **UI & API**: `Flows/Filament/Resources/FlowResource` provides the flow designer (`DesignFlow` page), run list/viewer (`ListFlowRuns`, `ViewFlowRun`), and observability widgets in `Flows/Filament/Widgets/` (recent runs, failure rate, duration, top failing). A separate flows REST API is registered by `StudioFlowsApiRouteRegistrar`.
 
 **Plugin API**: third parties register custom operations/triggers via `FilamentStudioPlugin::registerFlowOperation(key, label, activity, configSchema)` and `::registerFlowTrigger(...)` (see `tests/Fixtures/Flows/SlackPackage` for an example extension).
