@@ -18,9 +18,11 @@ class HydrateDraftFromPublished
             return $flow;
         }
 
+        // A copy of the published graph is not an unsaved draft: leave draft_updated_at null
+        // (as publishing does) so it is only set once the user actually saves a change.
         $flow->forceFill([
             'draft_graph' => $published->graph,
-            'draft_updated_at' => now(),
+            'draft_updated_at' => null,
         ])->save();
 
         return $flow;

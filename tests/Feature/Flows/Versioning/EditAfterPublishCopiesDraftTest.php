@@ -28,3 +28,11 @@ it('is a no-op when there is no published version', function () {
     app(HydrateDraftFromPublished::class)->hydrate($flow);
     expect($flow->fresh()->draft_graph)->toBeNull();
 });
+
+it('does not stamp the copied draft as saved, so it does not read as an unsaved draft', function () {
+    $flow = StudioFlow::factory()->withPublishedVersion(['nodes' => [['id' => 'p']], 'edges' => []])->create();
+
+    app(HydrateDraftFromPublished::class)->hydrate($flow);
+
+    expect($flow->fresh()->draft_updated_at)->toBeNull();
+});

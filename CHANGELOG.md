@@ -53,6 +53,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Decimals were shown padded to their storage scale** ("99.000000") in the record list. They now
+  show up to the field's scale without trailing zeros ("99", "12.5"), with the field's prefix and
+  suffix, on the list, the view page and List panels.
+- **A List panel with a one-field display template ("{{title}}") listed record UUIDs**: the
+  template went through the dashboard-variable resolver, which treats a lone `{{token}}` as a
+  variable. It is now read as a field template.
+- **Opening a published flow stamped its copied draft as saved** (`draft_updated_at`), so the
+  designer showed it as a separate draft. The copy is no longer stamped; only real saves are.
 - **Internal model names leaked into the UI** ("New studio field", "Create Studio Panel"); relation
   managers and dashboards now use plain labels.
 - **The API key form forced a collection permission row**, so an MCP-only key could not be saved.

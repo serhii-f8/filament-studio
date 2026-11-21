@@ -87,3 +87,40 @@ it('renders every placeholder of a multi-field template, sorted, with field labe
         ->assertDontSee('Alice')
         ->assertDontSee('Full_name');
 });
+
+it('shows decimal values without storage-scale padding', function () {
+    $price = StudioField::factory()->create([
+        'collection_id' => $this->collection->id, 'tenant_id' => 1,
+        'column_name' => 'price', 'label' => 'Price', 'field_type' => 'decimal', 'eav_cast' => EavCast::Decimal,
+    ]);
+    $record = StudioRecord::where('collection_id', $this->collection->id)->first();
+    StudioValue::create(['record_id' => $record->id, 'field_id' => $price->id, 'val_decimal' => '99.000000']);
+
+    $panel = StudioPanel::factory()->create([
+        'tenant_id' => 1,
+        'placement' => PanelPlacement::Dashboard,
+        'panel_type' => 'list',
+        'config' => ['collection_id' => $this->collection->id, 'display_template' => '{{price}}', 'limit' => 10],
+    ]);
+
+    $widget = Livewire::test(ListWidget::class, ['panel' => $panel])->loadTable()->assertSee('Price');
+    $column = $widget->instance()->getTable()->getColumn('price');
+
+    // MySQL returns DECIMAL(20,6) values padded ("99.000000"); SQLite does not, so format directly.
+    expect($column->formatState('99.000000'))->toBe('99')
+        ->and($column->formatState('12.500000'))->toBe('12.5');
+});
+
+it('shows the field for a single-token display template instead of falling back to the record id', function () {
+    $panel = StudioPanel::factory()->create([
+        'tenant_id' => 1,
+        'placement' => PanelPlacement::Dashboard,
+        'panel_type' => 'list',
+        'config' => ['collection_id' => $this->collection->id, 'display_template' => '{{name}}', 'limit' => 10],
+    ]);
+
+    $widget = Livewire::test(ListWidget::class, ['panel' => $panel])->loadTable();
+
+    expect(array_keys($widget->instance()->getTable()->getColumns()))->toBe(['name']);
+    $widget->assertSee('Alice');
+});

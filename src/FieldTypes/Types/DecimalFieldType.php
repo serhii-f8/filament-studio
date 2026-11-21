@@ -3,6 +3,8 @@
 namespace Flexpik\FilamentStudio\FieldTypes\Types;
 
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\Entry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\TextColumn;
@@ -70,10 +72,48 @@ class DecimalFieldType extends AbstractFieldType
 
     public function toTableColumn(): ?Column
     {
-        $scale = $this->setting('scale', 6);
+        return $this->withDisplayAffixes(
+            TextColumn::make($this->field->column_name)
+                ->numeric(maxDecimalPlaces: $this->displayScale()),
+        );
+    }
 
-        return TextColumn::make($this->field->column_name)
-            ->numeric(decimalPlaces: (int) $scale);
+    public function toInfolistEntry(): ?Entry
+    {
+        return $this->withDisplayAffixes(
+            TextEntry::make($this->field->column_name)
+                ->numeric(maxDecimalPlaces: $this->displayScale()),
+        );
+    }
+
+    /**
+     * Values are stored to the field's scale (6 places by default), so show up to that many
+     * places without the padding: 99.000000 reads as 99, 0.125000 as 0.125.
+     */
+    protected function displayScale(): int
+    {
+        return max(0, (int) $this->setting('scale', 6));
+    }
+
+    /**
+     * The input's prefix/suffix (e.g. "$", "%") also labels the displayed value.
+     *
+     * @template T of TextColumn|TextEntry
+     *
+     * @param  T  $component
+     * @return T
+     */
+    protected function withDisplayAffixes(TextColumn|TextEntry $component): TextColumn|TextEntry
+    {
+        if (filled($prefix = $this->setting('prefix'))) {
+            $component->prefix($prefix);
+        }
+
+        if (filled($suffix = $this->setting('suffix'))) {
+            $component->suffix($suffix);
+        }
+
+        return $component;
     }
 
     public function toFilter(): ?BaseFilter
