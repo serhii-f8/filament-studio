@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-11-21
+
 ### Security
 
 - **Passwords written through the REST API, MCP, Flows or code were stored in plain text** and
@@ -106,6 +108,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   return the fresh `updated_at`; pages are ordered by `created_at` then id; system timestamp fields
   are no longer repeated inside `data`; records created through the API or MCP get their
   collection's tenant.
+
+### Upgrading
+
+- Run `php artisan migrate`. The new `z_repair_json_storage` migration runs
+  `studio:repair-json-storage`, which moves rich editor, markdown, file, image and avatar fields
+  created before v1.0.3 to text storage and re-encodes malformed JSON values. It only touches what
+  needs repair and is safe to run again by hand.
+- Optional config: `global_search.*` and `permissions.auto_grant_roles` /
+  `permissions.auto_grant_to_field_managers` are new. Apps with a published
+  `config/filament-studio.php` keep working with their defaults (global search on, new collections
+  granted to field managers); re-publish or copy the sections to change them.
+- Behaviour changes to be aware of: fields created through MCP or code are now filterable unless
+  `is_filterable` is set to false; the record view page is an infolist (field types can customise
+  it via `toInfolistEntry()`); the flow run page's `replay` action is merged into `rerun`.
+- `laravel/mcp` ^1.0 is now allowed.
 
 ## [1.9.0] - 2026-11-18
 
@@ -593,7 +610,8 @@ generated.
 - **Configurable Table Prefix** to avoid naming conflicts
 - **Migration Log Tracking** for schema change auditing
 
-[Unreleased]: https://github.com/serhii-f8/filament-studio/compare/v1.9.0...HEAD
+[Unreleased]: https://github.com/serhii-f8/filament-studio/compare/v1.10.0...HEAD
+[1.10.0]: https://github.com/serhii-f8/filament-studio/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/serhii-f8/filament-studio/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/serhii-f8/filament-studio/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/serhii-f8/filament-studio/compare/v1.7.1...v1.8.0
